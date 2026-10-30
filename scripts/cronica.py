@@ -382,6 +382,8 @@ def main() -> None:
         # Prioridad: noticia del partido (foto del medio); si no hay, la página del partido en ESPN
         enlace = noticias[0]["enlace"] if noticias else (m.get("enlace_partido") or _enlace_espn(m))
         png = None if enlace else imagen(m, cronica["titular"])
+        # out/ solo existía si se generaba la tarjeta; con enlace hay que crearla
+        (RAIZ / "out").mkdir(exist_ok=True)
         (RAIZ / "out" / "cronica.txt").write_text(cronica["texto"], encoding="utf-8")
         print("\n" + cronica["titular"] + "\n\n" + cronica["texto"])
         if prueba:
