@@ -98,16 +98,21 @@ def _de_interes(equipo: dict) -> bool:
 def _partidos_espn(horas: int) -> list[dict]:
     """Partidos terminados de ESPN, con la misma forma que los de football-data."""
     ahora = datetime.now(timezone.utc)
-    rango = f"{(ahora - timedelta(hours=horas)):%Y%m%d}-{ahora:%Y%m%d}"
-    salida = []
-    for liga in ESPN_LIGAS:
+    desde = (ahora - timedelta(hours=horas)).date()
+    dias = [(desde + timedelta(days=i)).strftime("%Y%m%d") for i in range((ahora.date() - desde).days + 1)]
+    salida, vistos = [], set()
+    for liga, dia in [(l, d) for l in ESPN_LIGAS for d in dias]:
         try:
-            datos = http(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{liga}/scoreboard?dates={rango}")
+            datos = http(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{liga}/scoreboard?dates={dia}")
         except Exception as e:
-            print("espn", liga, e)
+            # Los avisos van a stderr: lo que sale por stdout se guarda en GITHUB_OUTPUT
+            print("espn", liga, dia, e, file=sys.stderr)
             continue
         nombre_liga = (datos.get("leagues") or [{}])[0].get("name", liga)
         for ev in datos.get("events", []):
+            if ev["id"] in vistos:
+                continue
+            vistos.add(ev["id"])
             comp = ev["competitions"][0]
             if not comp["status"]["type"].get("completed"):
                 continue
