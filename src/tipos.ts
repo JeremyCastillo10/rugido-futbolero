@@ -1,0 +1,49 @@
+export type Personaje = "presentador" | "merengue" | "cule";
+
+export type Gesto =
+  | "normal"
+  | "burla"
+  | "enojo"
+  | "risa"
+  | "triste"
+  | "celebrar"
+  | "sorpresa";
+
+export type Escena = {
+  personaje: Personaje;
+  texto: string;
+  gesto?: Gesto;
+  // Rótulo que aparece en pantalla y se mantiene hasta el siguiente
+  titular?: string;
+  // Ruta dentro de public/, la genera scripts/voces.py
+  audio?: string;
+};
+
+export type Episodio = {
+  fecha: string;
+  titulo: string;
+  escenas: Escena[];
+};
+
+export type NoticieroProps = {
+  episodio: Episodio | null;
+  // Duración en frames de cada escena
+  duraciones: number[];
+  // Volumen de la voz por frame (0..1) para mover la boca
+  envolventes: number[][];
+};
+
+export const PERSONAJES: Record<
+  Personaje,
+  { nombre: string; color: string; x: number; z: number }
+> = {
+  merengue: { nombre: "Merenguito", color: "#f4f1ea", x: -1.85, z: 0 },
+  presentador: { nombre: "Leo Rugido", color: "#f0a04b", x: 0, z: -0.35 },
+  cule: { nombre: "Culerín", color: "#e3245e", x: 1.85, z: 0 },
+};
+
+export const FPS = 30;
+export const INTRO = 45;
+export const PAUSA = 6;
+// Las voces de Gemini son lentas; se aceleran sin cambiar el tono
+export const VELOCIDAD = 1.15;

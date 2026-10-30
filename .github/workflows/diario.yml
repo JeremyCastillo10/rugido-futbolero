@@ -1,0 +1,50 @@
+name: Episodio diario
+
+on:
+  schedule:
+    # 12:00 UTC = 8:00 a.m. en República Dominicana
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: "¿Publicar en Instagram?"
+        type: boolean
+        default: true
+
+jobs:
+  episodio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - name: Dependencias de Chrome para Remotion
+        run: npx remotion browser ensure
+      - name: Guion
+        run: python scripts/guion.py
+      - name: Voces
+        run: python scripts/voces.py
+      - name: Render
+        run: npx remotion render Noticiero out/episodio.mp4 --gl=swangle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: episodio
+          path: |
+            out/episodio.mp4
+            public/episodio.json
+          retention-days: 14
+      - name: Publicar en Instagram
+        if: github.event_name == 'schedule' || inputs.publicar
+        run: python scripts/publicar.py

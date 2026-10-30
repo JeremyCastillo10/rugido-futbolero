@@ -1,0 +1,33 @@
+{
+  "name": "futbol-animado",
+  "version": "1.0.0",
+  "description": "Noticiero diario animado de fútbol europeo",
+  "scripts": {
+    "studio": "remotion studio",
+    "guion": "python scripts/guion.py",
+    "voces": "python scripts/voces.py",
+    "render": "remotion render Noticiero out/episodio.mp4",
+    "publicar": "python scripts/publicar.py",
+    "episodio": "npm run guion && npm run voces && npm run render"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@react-three/fiber": "^9.8.2",
+    "@remotion/cli": "^4.0.539",
+    "@remotion/google-fonts": "^4.0.539",
+    "@remotion/media-utils": "^4.0.539",
+    "@remotion/three": "^4.0.539",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.539",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}
