@@ -6,9 +6,6 @@ import { Leon } from "./Leon";
 import { Cancha } from "./Cancha";
 import { PERSONAJES, type Gesto, type Personaje } from "./tipos";
 
-const NARANJA = "#f0a04b";
-const NOCHE = "#0d1638";
-
 type Toma = { x: number; y: number; dist: number };
 
 const tomaDe = (p: Personaje | null): Toma => {
@@ -58,35 +55,6 @@ const Balon: React.FC<{ frame: number }> = ({ frame }) => (
   </group>
 );
 
-// Corona de la marca, hecha con cajas
-const Corona: React.FC<{ p: [number, number, number]; s: number; c: string }> = ({ p, s, c }) => (
-  <group position={p} scale={s}>
-    <mesh position={[0, -0.05, 0]}>
-      <boxGeometry args={[1, 0.22, 0.12]} />
-      <meshStandardMaterial color={c} emissive={c} emissiveIntensity={0.5} flatShading />
-    </mesh>
-    {[-0.4, 0, 0.4].map((x) => (
-      <mesh key={x} position={[x, 0.2, 0]}>
-        <boxGeometry args={[0.2, 0.3, 0.12]} />
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={0.5} flatShading />
-      </mesh>
-    ))}
-  </group>
-);
-
-// Pantalla de fondo: panel LED con pulso suave
-const Pantalla: React.FC<{
-  p: [number, number, number];
-  s: [number, number, number];
-  color: string;
-  intensidad: number;
-}> = ({ p, s, color, intensidad }) => (
-  <mesh position={p}>
-    <boxGeometry args={s} />
-    <meshStandardMaterial color={color} emissive={color} emissiveIntensity={intensidad} flatShading />
-  </mesh>
-);
-
 export const Escenario: React.FC<{
   frame: number;
   hablando: Personaje | null;
@@ -98,16 +66,14 @@ export const Escenario: React.FC<{
   goles?: { cantidad: number; dur: number };
 }> = ({ frame, hablando, anterior, gesto, boca, t, goles }) => {
   const mirarX = hablando ? PERSONAJES[hablando].x : 0;
-  const pulso = 0.3 + Math.sin(frame / 14) * 0.08;
   return (
     <>
-      <color attach="background" args={["#060b1f"]} />
-      <fog attach="fog" args={["#060b1f", 11, 26]} />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[2, 6, 6]} intensity={1.5} />
-      <pointLight position={[-4, 3, 2]} intensity={22} color="#3a86ff" />
-      <pointLight position={[4, 3, 2]} intensity={22} color="#3a86ff" />
-      <pointLight position={[0, 1.6, 2.6]} intensity={14} color={NARANJA} />
+      <color attach="background" args={["#0b1230"]} />
+      <fog attach="fog" args={["#0b1230", 9, 24]} />
+      <ambientLight intensity={0.75} />
+      <directionalLight position={[2, 6, 6]} intensity={1.6} />
+      <pointLight position={[-4, 3, 2]} intensity={25} color="#9d4edd" />
+      <pointLight position={[4, 3, 2]} intensity={25} color="#3a86ff" />
 
       {goles ? null : <Camara antes={anterior} ahora={hablando} t={t} />}
       <Cancha
@@ -117,48 +83,38 @@ export const Escenario: React.FC<{
         activa={Boolean(goles)}
       />
 
-      {/* Muro del set */}
-      <Pantalla p={[0, 4.5, -3.2]} s={[18, 9, 0.2]} color="#0a1230" intensidad={0} />
-      {/* Panel central con la marca */}
-      <Pantalla p={[0, 4.0, -3.05]} s={[6.2, 3.4, 0.12]} color="#0f2f6b" intensidad={pulso + 0.1} />
-      <Pantalla p={[0, 4.0, -2.98]} s={[6.0, 0.08, 0.02]} color={NARANJA} intensidad={0.6} />
-      <Corona p={[0, 5.95, -2.95]} s={0.55} c={NARANJA} />
-      {/* Pantalla central con un campo y luces de la grada, como en el mockup */}
-      <Pantalla p={[0, 2.6, -2.99]} s={[6.0, 0.9, 0.03]} color="#1b7f3b" intensidad={0.45} />
-      {Array.from({ length: 36 }, (_, i) => (
-        <Pantalla
-          key={`luz${i}`}
-          p={[-2.8 + (i % 12) * 0.52, 3.55 + Math.floor(i / 12) * 0.5, -2.97]}
-          s={[0.14, 0.14, 0.02]}
-          color={i % 3 === 0 ? NARANJA : "#dfe9ff"}
-          intensidad={0.5 + Math.sin(frame / 9 + i) * 0.3}
-        />
-      ))}
-      {/* Paneles laterales */}
-      <Pantalla p={[-4.9, 3.6, -3.0]} s={[2.9, 4.4, 0.12]} color="#123a86" intensidad={pulso} />
-      <Pantalla p={[4.9, 3.6, -3.0]} s={[2.9, 4.4, 0.12]} color="#1b4fa8" intensidad={pulso} />
-      {/* Menú lateral derecho */}
-      <Pantalla p={[6.7, 3.0, -2.9]} s={[2.4, 3.6, 0.1]} color={NOCHE} intensidad={0} />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <Pantalla
-          key={i}
-          p={[6.7, 4.5 - i * 0.6, -2.84]}
-          s={[1.6, 0.14, 0.02]}
-          color={i === 0 ? NARANJA : "#3a86ff"}
-          intensidad={i === 0 ? 0.7 : 0.35}
-        />
+      {/* Pared y pantalla del estudio */}
+      <mesh position={[0, 3, -3.2]}>
+        <boxGeometry args={[16, 9, 0.2]} />
+        <meshStandardMaterial color="#141b45" flatShading />
+      </mesh>
+      <mesh position={[0, 4.2, -3.0]}>
+        <boxGeometry args={[5.2, 2.8, 0.15]} />
+        <meshStandardMaterial color="#0f3d7a" emissive="#1f6feb" emissiveIntensity={0.35} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 4.2, 3.2, -3.0]}>
+          <boxGeometry args={[0.4, 4.5, 0.2]} />
+          <meshStandardMaterial
+            color={s < 0 ? "#7b2cbf" : "#3a86ff"}
+            emissive={s < 0 ? "#7b2cbf" : "#3a86ff"}
+            emissiveIntensity={0.6 + Math.sin(frame / 12 + s) * 0.25}
+          />
+        </mesh>
       ))}
       <Balon frame={frame} />
 
-      {/* Piso oscuro con anillo naranja */}
-      <mesh position={[0, -0.05, 0.5]}>
-        <boxGeometry args={[18, 0.1, 12]} />
-        <meshStandardMaterial color="#0a1028" roughness={0.3} metalness={0.2} flatShading />
+      {/* Piso tipo césped en voxeles */}
+      <mesh position={[0, -0.05, 0]}>
+        <boxGeometry args={[16, 0.1, 12]} />
+        <meshStandardMaterial color="#1b7f3b" flatShading />
       </mesh>
-      <mesh position={[0, 0.01, 1.2]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[5.2, 0.05, 8, 96]} />
-        <meshStandardMaterial color={NARANJA} emissive={NARANJA} emissiveIntensity={0.9} />
-      </mesh>
+      {[-3, -1, 1, 3].map((fx) => (
+        <mesh key={fx} position={[fx * 1.5, 0.001, 0]}>
+          <boxGeometry args={[1.5, 0.1, 12]} />
+          <meshStandardMaterial color="#22963f" flatShading />
+        </mesh>
+      ))}
 
       {(Object.keys(PERSONAJES) as Personaje[]).map((p) => {
         const Componente = p === "presentador" ? Leon : Muneco;
@@ -179,7 +135,7 @@ export const Escenario: React.FC<{
       })}
 
       {/* Laptop y taza del presentador */}
-      <group position={[0.15, 0.8, 1.0]}>
+      <group position={[0.15, 0.7, 1.0]}>
         <mesh position={[0, 0.02, 0]}>
           <boxGeometry args={[0.9, 0.05, 0.6]} />
           <meshStandardMaterial color="#3a3d4a" flatShading />
@@ -189,7 +145,7 @@ export const Escenario: React.FC<{
           <meshStandardMaterial color="#2b2e38" flatShading />
         </mesh>
       </group>
-      <group position={[-1.05, 0.95, 1.1]}>
+      <group position={[-1.05, 0.82, 1.1]}>
         <mesh>
           <boxGeometry args={[0.26, 0.3, 0.26]} />
           <meshStandardMaterial color="#15151b" flatShading />
@@ -200,20 +156,19 @@ export const Escenario: React.FC<{
         </mesh>
       </group>
 
-      {/* Mesa del noticiero: cuerpo oscuro, tapa y franja naranja */}
-      <mesh position={[0, 0.36, 1.15]}>
-        <boxGeometry args={[8.0, 0.66, 1.1]} />
-        <meshStandardMaterial color={NOCHE} flatShading />
+      {/* Mesa del noticiero */}
+      <mesh position={[0, 0.32, 1.15]}>
+        <boxGeometry args={[7.8, 0.64, 0.9]} />
+        <meshStandardMaterial color="#1d3557" flatShading />
       </mesh>
-      <mesh position={[0, 0.74, 1.15]}>
-        <boxGeometry args={[8.2, 0.12, 1.3]} />
-        <meshStandardMaterial color="#18214a" flatShading />
+      <mesh position={[0, 0.66, 1.15]}>
+        <boxGeometry args={[8.0, 0.08, 1.0]} />
+        <meshStandardMaterial color="#e63946" flatShading />
       </mesh>
-      <mesh position={[0, 0.52, 1.71]}>
-        <boxGeometry args={[7.6, 0.06, 0.03]} />
-        <meshStandardMaterial color={NARANJA} emissive={NARANJA} emissiveIntensity={0.9} />
+      <mesh position={[0, 0.32, 1.61]}>
+        <boxGeometry args={[3.2, 0.3, 0.02]} />
+        <meshStandardMaterial color="#ffd166" emissive="#ffd166" emissiveIntensity={0.4} />
       </mesh>
-      <Corona p={[0, 0.36, 1.73]} s={0.42} c={NARANJA} />
     </>
   );
 };

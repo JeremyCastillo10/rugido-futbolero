@@ -2,7 +2,6 @@ import React from "react";
 import {
   AbsoluteFill,
   Html5Audio,
-  Img,
   Sequence,
   interpolate,
   spring,
@@ -13,7 +12,6 @@ import {
 import { ThreeCanvas } from "@remotion/three";
 import { loadFont } from "@remotion/google-fonts/Rubik";
 import { Escenario } from "./Escenario";
-import { EscenaFoto } from "./EscenaFoto";
 import { TarjetaVisual } from "./Visuales";
 import { tiroActual } from "./Cancha";
 import { CUENTA, INTRO, PERSONAJES, VELOCIDAD, type NoticieroProps } from "./tipos";
@@ -78,33 +76,17 @@ export const Noticiero: React.FC<NoticieroProps> = ({
 
   return (
     <AbsoluteFill style={{ fontFamily, backgroundColor: "#0b1230" }}>
-      {goles ? (
-        <ThreeCanvas width={width} height={height} camera={{ fov: 42, position: [0, 2.6, 11] }}>
-          <Escenario
-            frame={frame}
-            hablando={escena?.personaje ?? null}
-            anterior={anterior}
-            gesto={escena?.gesto ?? "normal"}
-            boca={boca}
-            t={t}
-            goles={goles}
-          />
-        </ThreeCanvas>
-      ) : (
-        <>
-          {/* Fondo: la misma escena desenfocada para llenar el cuadro */}
-          <Img
-            src={staticFile("escena/escena.jpg")}
-            style={{ position: "absolute", inset: -80, width: width + 160, height: height + 160, objectFit: "cover", filter: "blur(28px) brightness(0.45)" }}
-          />
-          <EscenaFoto
-            hablando={enOutro ? "presentador" : (escena?.personaje ?? null)}
-            anterior={anterior}
-            boca={enOutro ? 0 : boca}
-            t={enOutro ? tOutro : i >= 0 ? t : 999}
-          />
-        </>
-      )}
+      <ThreeCanvas width={width} height={height} camera={{ fov: 42, position: [0, 2.6, 11] }}>
+        <Escenario
+          frame={frame}
+          hablando={enOutro ? "presentador" : (escena?.personaje ?? null)}
+          anterior={anterior}
+          gesto={enOutro ? "celebrar" : (escena?.gesto ?? "normal")}
+          boca={boca}
+          t={enOutro ? tOutro : i >= 0 ? t : 999}
+          goles={goles}
+        />
+      </ThreeCanvas>
 
       {visual && <TarjetaVisual visual={visual} t={t} dur={dur} />}
 
@@ -309,7 +291,17 @@ export const Noticiero: React.FC<NoticieroProps> = ({
       {escenas.map((e, k) =>
         e.audio ? (
           <Sequence key={k} from={inicios[k]} durationInFrames={duraciones[k]}>
-            <Html5Audio src={staticFile(e.audio)} playbackRate={VELOCIDAD} />
+            <Html5Audio
+              src={staticFile(e.audio)}
+              playbackRate={VELOCIDAD}
+              // Fundido de entrada y salida para que la voz no empiece ni termine de golpe
+              volume={(f) =>
+                interpolate(f, [0, 4, duraciones[k] - 4, duraciones[k]], [0, 1, 1, 0], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                })
+              }
+            />
           </Sequence>
         ) : null,
       )}

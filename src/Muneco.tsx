@@ -166,42 +166,29 @@ const D = 1.1;
 const CY = 1.0; // centro del cuerpo
 const FZ = D / 2 + 0.02; // cara frontal
 
-// Bufanda de dos colores alrededor del cuello, delante del cuerpo
-const Bufanda: React.FC<{ a: string; b: string }> = ({ a, b }) => (
-  <group position={[0, CY + H / 2 - 0.06, D / 2 + 0.03]}>
-    <Caja p={[0, 0, 0]} s={[W + 0.14, 0.1, 0.18]} c={a} />
-    <Caja p={[0, -0.11, 0]} s={[W + 0.14, 0.1, 0.18]} c={b} />
-    {/* Cola de la bufanda colgando al costado */}
-    <Caja p={[0.65, -0.36, 0.04]} s={[0.14, 0.62, 0.12]} c={a} />
-    <Caja p={[0.65, -0.1, 0.04]} s={[0.14, 0.1, 0.12]} c={b} />
-  </group>
-);
-
-// Gorra: cúpula, franja y visera
-const Gorra: React.FC<{ c: string; franja: string }> = ({ c, franja }) => (
-  <group position={[0, CY + H / 2, 0]}>
-    <Caja p={[0, 0.16, 0]} s={[W * 0.86, 0.3, D * 0.86]} c={c} />
-    <Caja p={[0, 0.04, 0]} s={[W * 0.9, 0.07, D * 0.9]} c={franja} />
-    <Caja p={[0, 0.16, D * 0.43 + 0.14]} s={[W * 0.7, 0.06, 0.4]} r={[0.12, 0, 0]} c={c} />
-    {/* Escudito blanco en el frente de la gorra */}
-    <Caja p={[0, 0.2, D * 0.43 + 0.02]} s={[0.22, 0.16, 0.03]} c={franja} brillo={0.3} />
-  </group>
-);
-
 // Comentaristas: cubo con cara (merengue y culé)
 export const Muneco: React.FC<MunecoProps> = (props) => {
   const { tipo, x, z, t } = props;
   const p = calcularPose(props);
   const esCule = tipo === "cule";
-  // Colores del equipo: cuerpo, tenis y extremidades
-  // Pantalón azul marino para ambos; tenis blancos (merengue) o rojos (culé)
-  const extremidad = esCule ? "#1a2a6c" : "#1a3f8f";
-  const tenis = esCule ? "#c8102e" : "#f4f1ea";
-  const guante = esCule ? "#c8102e" : "#f4f1ea";
-  const brazoColor = esCule ? "#c8102e" : "#f4f1ea";
-  const brazoColorD = esCule ? "#1a2a6c" : "#f4f1ea";
+  const extremidad = esCule ? "#1d4fa3" : "#d9d4c7";
 
-  const cuerpo = <Caja p={[0, CY, 0]} s={[W, H, D]} c={esCule ? "#c8102e" : "#f4f1ea"} brillo={p.rojo} />;
+  const cuerpo = esCule ? (
+    // Rayas azulgranas
+    <>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Caja
+          key={i}
+          p={[-W / 2 + W / 10 + (i * W) / 5, CY, 0]}
+          s={[W / 5 + 0.001, H, D]}
+          c={i % 2 === 0 ? "#a50044" : "#1d4fa3"}
+          brillo={p.rojo}
+        />
+      ))}
+    </>
+  ) : (
+    <Caja p={[0, CY, 0]} s={[W, H, D]} c="#f4f1ea" brillo={p.rojo} />
+  );
 
   return (
     <group position={[x, p.y, z]} rotation={[p.rotX, p.rotY, p.rotZ]} scale={p.escala}>
@@ -210,21 +197,16 @@ export const Muneco: React.FC<MunecoProps> = (props) => {
       {/* Patas */}
       {[-0.42, 0.42].map((px) =>
         [-0.3, 0.3].map((pz) => (
-          <group key={`${px}${pz}`}>
-            <Caja p={[px, 0.2, pz]} s={[0.26, 0.4, 0.26]} c={extremidad} />
-            <Caja p={[px, 0.05, pz + 0.04]} s={[0.28, 0.12, 0.34]} c={tenis} />
-          </group>
+          <Caja key={`${px}${pz}`} p={[px, 0.2, pz]} s={[0.26, 0.4, 0.26]} c={extremidad} />
         )),
       )}
 
       {/* Brazos con pivote en el hombro */}
       <group position={[-W / 2 - 0.12, CY + 0.25, 0]} rotation={[0, 0, p.brazoI]}>
-        <Caja p={[0, -0.25, 0]} s={[0.22, 0.5, 0.3]} c={brazoColor} />
-        <Caja p={[0, -0.56, 0]} s={[0.26, 0.2, 0.3]} c={guante} />
+        <Caja p={[0, -0.25, 0]} s={[0.22, 0.5, 0.3]} c={esCule ? "#a50044" : "#e9e4d8"} />
       </group>
       <group position={[W / 2 + 0.12, CY + 0.25, 0]} rotation={[0, 0, p.brazoD]}>
-        <Caja p={[0, -0.25, 0]} s={[0.22, 0.5, 0.3]} c={brazoColorD} />
-        <Caja p={[0, -0.56, 0]} s={[0.26, 0.2, 0.3]} c={guante} />
+        <Caja p={[0, -0.25, 0]} s={[0.22, 0.5, 0.3]} c={esCule ? "#1d4fa3" : "#e9e4d8"} />
       </group>
 
       {/* Ojos */}
@@ -233,7 +215,7 @@ export const Muneco: React.FC<MunecoProps> = (props) => {
           <Caja
             p={[ex, CY + 0.17, FZ]}
             s={[0.24 * p.ojoS, 0.3 * p.ojoY * p.ojoS, 0.04]}
-            c={esCule ? OJOS : "#1f5fbf"}
+            c={OJOS}
           />
           {p.ojoY > 0.5 && (
             <Caja p={[ex + 0.05, CY + 0.24, FZ + 0.025]} s={[0.07, 0.07, 0.02]} c="#ffffff" brillo={0.6} />
@@ -273,11 +255,24 @@ export const Muneco: React.FC<MunecoProps> = (props) => {
       {/* Boca */}
       <Caja p={[0, CY - 0.12 - p.bocaAlto / 2, FZ]} s={[p.bocaAncho, p.bocaAlto, 0.04]} c={BOCA} />
 
-      {/* Bufanda a rayas del equipo */}
-      <Bufanda a={esCule ? "#1a2a6c" : "#1a3f8f"} b={esCule ? "#c8102e" : "#f4f1ea"} />
+      {/* Corona del merengue */}
+      {tipo === "merengue" && (
+        <group position={[0.15, CY + H / 2, 0]} rotation={[0, 0, -0.12]}>
+          <Caja p={[0, 0.07, 0]} s={[0.75, 0.14, 0.55]} c="#f2b632" brillo={0.15} />
+          {[-0.28, 0, 0.28].map((cx) => (
+            <Caja key={cx} p={[cx, 0.24, 0]} s={[0.14, 0.2, 0.14]} c="#f2b632" brillo={0.15} />
+          ))}
+          <Caja p={[0, 0.07, 0.29]} s={[0.12, 0.08, 0.02]} c="#7b2cbf" brillo={0.3} />
+        </group>
+      )}
 
-      {/* Gorra con visera */}
-      <Gorra c={esCule ? "#1a2a6c" : "#1a3f8f"} franja={esCule ? "#c8102e" : "#f4f1ea"} />
+      {/* Bufanda azulgrana del culé */}
+      {esCule && (
+        <>
+          <Caja p={[0, CY + H / 2 + 0.05, 0]} s={[0.9, 0.1, 0.7]} c="#ffcd00" />
+          <Caja p={[0.25, CY + H / 2 + 0.16, 0]} s={[0.14, 0.14, 0.14]} c="#a50044" />
+        </>
+      )}
     </group>
   );
 };

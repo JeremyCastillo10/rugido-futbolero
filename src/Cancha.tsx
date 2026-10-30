@@ -75,16 +75,6 @@ export const Cancha: React.FC<{ t: number; dur: number; goles: number; activa: b
       {activa && <CamaraCancha p={p} />}
       <pointLight position={[0, 6, 4]} intensity={40} color="#ffffff" />
 
-      {/* Tribunas al fondo y a los lados, con franjas de color */}
-      {[0, 1, 2].map((nivel) => (
-        <B key={`t${nivel}`} p={[0, 0.5 + nivel * 0.9, -9.5 - nivel * 0.9]} s={[24, 0.9, 1.2]} c={nivel % 2 ? "#243363" : "#1a2750"} />
-      ))}
-      {[-4, -2, 0, 2, 4].map((x) => (
-        <B key={`f${x}`} p={[x * 2.4, 2.4, -8.8]} s={[1.6, 0.2, 0.2]} c={x % 4 === 0 ? "#f0a04b" : "#3a86ff"} o={undefined} />
-      ))}
-      <B p={[-12, 1.5, -2]} s={[1.2, 3, 16]} c="#1a2750" />
-      <B p={[12, 1.5, -2]} s={[1.2, 3, 16]} c="#1a2750" />
-
       {/* Césped a rayas y líneas */}
       {[-3, -2, -1, 0, 1, 2, 3].map((i) => (
         <B key={i} p={[0, -0.05, i * 3]} s={[16, 0.1, 3]} c={i % 2 ? "#1b7f3b" : "#22963f"} />
