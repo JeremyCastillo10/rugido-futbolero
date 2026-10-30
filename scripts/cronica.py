@@ -144,6 +144,11 @@ def _partidos_espn(horas: int) -> list[dict]:
 SLUG_ESPN = {"PD": "esp.1", "PL": "eng.1", "SA": "ita.1", "BL1": "ger.1", "FL1": "fra.1", "CL": "uefa.champions"}
 
 
+def _coincide(nombres_a: set[str], nombres_b: set[str]) -> bool:
+    """Dos equipos son el mismo si uno de sus nombres contiene al otro (p. ej. 'le havre' y 'le havre ac')."""
+    return any(a in b or b in a for a in nombres_a for b in nombres_b)
+
+
 def _enlace_espn(m: dict) -> str | None:
     """Busca el partido en el marcador de ESPN (mismo día y equipos) y devuelve su página."""
     liga = SLUG_ESPN.get(m["competition"].get("code"))
@@ -162,7 +167,7 @@ def _enlace_espn(m: dict) -> str | None:
             c["homeAway"]: alias({"id": None, "name": c["team"]["displayName"], "shortName": c["team"].get("shortDisplayName")})
             for c in comp["competitors"]
         }
-        if equipos.get("home", set()) & local and equipos.get("away", set()) & visita:
+        if _coincide(equipos.get("home", set()), local) and _coincide(equipos.get("away", set()), visita):
             return (ev.get("links") or [{}])[0].get("href")
     return None
 
