@@ -3,6 +3,7 @@ import { Composition, staticFile, type CalculateMetadataFunction } from "remotio
 import { getAudioData } from "@remotion/media-utils";
 import { Noticiero } from "./Noticiero";
 import { Avatar } from "./Avatar";
+import { Portada } from "./Portada";
 import { Cronica, type CronicaProps } from "./Cronica";
 import { FPS, INTRO, OUTRO, PAUSA, VELOCIDAD, type Episodio, type NoticieroProps } from "./tipos";
 
@@ -51,6 +52,7 @@ const calcularMetadata: CalculateMetadataFunction<NoticieroProps> = async ({ pro
 
 export const RemotionRoot: React.FC = () => (
   <>
+  <Composition id="Portada" component={Portada} width={1640} height={624} fps={FPS} durationInFrames={1} />
   <Composition id="Avatar" component={Avatar} width={1080} height={1080} fps={FPS} durationInFrames={1} />
   <Composition
     id="Cronica"
