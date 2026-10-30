@@ -1,4 +1,4 @@
-"""Busca partidos terminados del Madrid y el Barça, escribe la crónica con Gemini y la publica en Facebook.
+"""Busca partidos terminados de los grandes de Europa, escribe la crónica con Gemini y la publica en Facebook.
 
 Uso:
   python scripts/cronica.py           revisa partidos de las últimas 30 horas y publica los nuevos
@@ -20,29 +20,49 @@ import xml.etree.ElementTree as ET
 
 from guion import FEEDS, MODELOS_TEXTO
 
-# IDs de football-data.org: Real Madrid y FC Barcelona
-EQUIPOS = {86: "Real Madrid", 81: "FC Barcelona"}
+# IDs de football-data.org de los clubes que cubre la página, con los nombres que usa la prensa
+EQUIPOS = {
+    86: {"real madrid", "madrid", "merengue"},
+    81: {"barcelona", "barça", "barca", "azulgrana", "culé"},
+    78: {"atlético", "atletico", "atleti", "colchonero"},
+    64: {"liverpool"},
+    65: {"manchester city", "man city", "city"},
+    66: {"manchester united", "man united", "united"},
+    5: {"bayern"},
+    524: {"psg", "paris saint-germain", "parís saint-germain", "paris sg"},
+    109: {"juventus", "juve"},
+    113: {"napoli", "nápoles"},
+    100: {"roma"},
+    7397: {"como 1907", "como"},
+}
+COMPETICIONES = "PD,PL,SA,BL1,FL1,CL"
 PUBLICADAS = RAIZ / "data" / "cronicas_publicadas.json"
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
          "septiembre", "octubre", "noviembre", "diciembre"]
 
-INSTRUCCIONES = """Eres redactor de "Leo Rugido | Fútbol Europeo", una página de Facebook de noticias de fútbol en español.
+INSTRUCCIONES = """Eres redactor de "Leo Rugido - Fútbol Europeo", una página de Facebook de fútbol en español
+con un estilo de ÚLTIMA HORA: emocionante, apasionado y muy directo, como los posts virales de páginas de fútbol.
 Escribe la crónica de un partido que acaba de terminar.
 
-Reglas:
-1. Habla SOLO de este partido. Usa SOLO los hechos de los DATOS (resultado, descanso, competición, estadio, árbitro
-   y las noticias de prensa sobre el partido: goleadores, jugadas o protagonistas que mencionen). No menciones otras noticias.
-   No inventes goleadores, minutos, jugadas, lesiones ni declaraciones. Si no hay datos de goleadores, no los nombres.
-   Tampoco saques conclusiones que no estén en los datos (rachas, posición en la tabla, "lucha por el título", "gran momento").
-2. Formato:
-   - "titular": frase corta y con gancho (máx 70 caracteres), sin emojis.
-   - "texto": 3-4 párrafos cortos separados por una línea en blanco. Empieza con un emoji y el resultado en mayúsculas
-     (ej: "⚽ FINAL | Barça 3-1 Alavés"). Cuenta cómo fue el partido: resultado, cómo iba al descanso y, si las
-     noticias lo dicen, quién marcó y los momentos clave. No pongas enlaces en el texto.
-   - Termina con una pregunta para que la gente comente y 4-5 hashtags.
-3. Tono: periodístico pero cercano y con un toque de humor; al final, una línea de Merenguito o Culerín (los hinchas del canal)
-   reaccionando, por ejemplo: "Merenguito: ..." o "Culerín: ...".
-4. Nada ofensivo.
+Reglas de contenido:
+1. Habla SOLO de este partido. Usa SOLO los hechos de los DATOS: resultado, descanso, competición, estadio, árbitro,
+   la tabla de la liga y las noticias de prensa sobre el partido (goleadores, asistencias, cambios clave, protagonistas).
+   No menciones otras noticias. No inventes goleadores, minutos, jugadas, lesiones, cifras ni declaraciones.
+2. Puedes hablar de la tabla (posición, puntos, distancia al líder) SOLO con los números de los DATOS.
+
+Estilo:
+3. "titular": empieza con "¡¡ÚLTIMA HORA:" y termina con "!!", en MAYÚSCULAS, con el hecho principal
+   (máx 80 caracteres). Ejemplo de forma: "¡¡ÚLTIMA HORA: EL BAYERN APLASTÓ AL DORTMUND!!".
+4. "texto": empieza repitiendo el titular. Luego 3-4 párrafos cortos separados por una línea en blanco:
+   - Contexto emocional del partido (dónde, contra quién, qué estaba en juego según los datos).
+   - Cómo se ganó: goleadores y protagonistas si las noticias los nombran.
+   - Qué significa el resultado en la tabla (con los números de los DATOS) o en la competición.
+   Resalta en MAYÚSCULAS y entre ¡¡ !! los datos más fuertes (el resultado, un doblete, los puntos).
+   Cierra con una frase final en mayúsculas celebrando o lamentando el resultado.
+   Después, en una línea aparte, una reacción corta de Merenguito (hincha del Madrid) o Culerín (hincha del Barça)
+   si el partido es de su equipo o de un rival directo; si no, omite la reacción.
+   Termina con 3-5 hashtags. No pongas enlaces.
+5. Nada ofensivo hacia jugadores, árbitros ni aficiones.
 
 Responde SOLO con JSON: {"titular": "...", "texto": "..."}"""
 
@@ -52,19 +72,41 @@ def cargar_publicadas() -> list[int]:
 
 
 def partidos_terminados(horas: int) -> list[dict]:
+    """Una sola consulta para todas las ligas (el plan gratis permite 10 por minuto)."""
     desde = (datetime.now(timezone.utc) - timedelta(hours=horas)).date().isoformat()
     hasta = datetime.now(timezone.utc).date().isoformat()
-    vistos, partidos = set(), []
-    for equipo in EQUIPOS:
-        datos = http(
-            f"https://api.football-data.org/v4/teams/{equipo}/matches?status=FINISHED&dateFrom={desde}&dateTo={hasta}",
-            headers={"X-Auth-Token": env("FOOTBALL_DATA_KEY")},
-        )
-        for m in datos.get("matches", []):
-            if m["id"] not in vistos:
-                vistos.add(m["id"])
-                partidos.append(m)
-    return partidos
+    datos = http(
+        "https://api.football-data.org/v4/matches"
+        f"?competitions={COMPETICIONES}&status=FINISHED&dateFrom={desde}&dateTo={hasta}",
+        headers={"X-Auth-Token": env("FOOTBALL_DATA_KEY")},
+    )
+    return [
+        m for m in datos.get("matches", [])
+        if m["homeTeam"]["id"] in EQUIPOS or m["awayTeam"]["id"] in EQUIPOS
+    ]
+
+
+def tabla(m: dict) -> str:
+    """Posición, puntos y distancia al líder de los dos equipos (solo partidos de liga)."""
+    codigo = m["competition"].get("code")
+    if codigo == "CL":
+        return ""
+    datos = http(
+        f"https://api.football-data.org/v4/competitions/{codigo}/standings",
+        headers={"X-Auth-Token": env("FOOTBALL_DATA_KEY")},
+    )
+    total = next((t["table"] for t in datos.get("standings", []) if t["type"] == "TOTAL"), [])
+    if not total:
+        return ""
+    lider = total[0]
+    lineas = [f"Líder: {nombre(lider['team'])} con {lider['points']} puntos"]
+    for fila in total:
+        if fila["team"]["id"] in (m["homeTeam"]["id"], m["awayTeam"]["id"]):
+            lineas.append(
+                f"{nombre(fila['team'])}: {fila['position']}º, {fila['points']} puntos, "
+                f"a {lider['points'] - fila['points']} del líder ({fila['won']}G {fila['draw']}E {fila['lost']}P)"
+            )
+    return "Tabla después del partido:\n" + "\n".join(lineas)
 
 
 def nombre(equipo: dict) -> str:
@@ -79,26 +121,30 @@ def estadio_de(equipo_id: int) -> str | None:
     return datos.get("venue")
 
 
-# Feeds extra de los dos clubes, donde salen las crónicas de sus partidos
+# Feeds extra donde salen las crónicas de los partidos (si alguno falla se ignora)
 FEEDS_CLUBES = [
     "https://e00-marca.uecdn.es/rss/futbol/real-madrid.xml",
     "https://e00-marca.uecdn.es/rss/futbol/barcelona.xml",
+    "https://e00-marca.uecdn.es/rss/futbol/atletico.xml",
+    "https://e00-marca.uecdn.es/rss/futbol/futbol-internacional.xml",
+    "https://e00-marca.uecdn.es/rss/futbol/champions-league.xml",
     "https://as.com/rss/futbol/real_madrid.xml",
     "https://as.com/rss/futbol/barcelona.xml",
+    "https://as.com/rss/futbol/internacional.xml",
+    "https://www.mundodeportivo.com/rss/futbol/futbol-internacional.xml",
 ]
 
 
 def alias(equipo: dict) -> set[str]:
-    """Formas en que la prensa nombra a un equipo (Barça, Barcelona, FC Barcelona...)."""
-    nombres = {equipo["name"], equipo.get("shortName") or "", equipo.get("tla") or ""}
+    """Formas en que la prensa nombra a un equipo."""
+    if equipo["id"] in EQUIPOS:
+        return EQUIPOS[equipo["id"]]
     limpio = set()
-    for n in nombres:
-        for palabra in ("FC ", " FC", "CF ", " CF", "Club ", "Deportivo "):
+    for n in (equipo["name"], equipo.get("shortName") or ""):
+        for palabra in ("FC ", " FC", "CF ", " CF", "Club ", "Deportivo ", "AS ", "SSC ", "AFC ", " 1907"):
             n = n.replace(palabra, "")
-        if len(n) > 2:
-            limpio.add(n.lower())
-    if "barcelona" in limpio or "barça" in limpio:
-        limpio |= {"barça", "barcelona", "barca"}
+        if len(n) > 3:
+            limpio.add(n.strip().lower())
     return limpio
 
 
@@ -158,6 +204,7 @@ def escribir(m: dict, noticias: list[dict]) -> dict:
         f"Descanso: {ht.get('home')}-{ht.get('away')}\n"
         f"Estadio: {m.get('venue') or 'desconocido'}\n"
         f"Árbitro: {arbitro or 'desconocido'}\n\n"
+        f"{tabla(m)}\n\n"
         "Noticias de prensa sobre ESTE partido:\n" + ("\n".join(relacionados) or "(ninguna todavía)")
     )
     print(datos, "\n")
@@ -198,7 +245,7 @@ def imagen(m: dict, titular: str) -> object:
                 (PUBLIC / "fotos" / "cronica.jpg").write_bytes(r.read())
             props |= {"foto": "fotos/cronica.jpg", "credito": foto["credito"]}
     (PUBLIC / "cronica.json").write_text(json.dumps(props, ensure_ascii=False, indent=2), encoding="utf-8")
-    salida = RAIZ / "out" / "cronica.png"
+    salida = RAIZ / "out" / f"cronica-{m['id']}.png"
     salida.parent.mkdir(exist_ok=True)
     subprocess.run(
         ["npx", "remotion", "still", "Cronica", str(salida), "--log=error"],

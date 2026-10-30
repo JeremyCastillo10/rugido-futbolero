@@ -1,12 +1,10 @@
 {
-  "local": "Barça",
-  "visitante": "Real Madrid",
-  "golesLocal": 1,
-  "golesVisitante": 2,
-  "competicion": "Primera Division",
-  "fecha": "25 de octubre",
-  "titular": "El Real Madrid se impone 1-2 al Barça en la jornada 10",
-  "estadio": "Camp Nou",
-  "foto": "fotos/cronica.jpg",
-  "credito": "Foto: Oh-Barcelona.com from Barcelona, Spain · CC BY 2.0"
+  "local": "Genoa",
+  "visitante": "Juventus",
+  "golesLocal": 2,
+  "golesVisitante": 0,
+  "competicion": "Serie A",
+  "fecha": "28 de octubre",
+  "titular": "¡¡ÚLTIMA HORA: EL GENOA DERROTA Y APLASTA A LA JUVENTUS!!",
+  "estadio": "Stadio Comunale Luigi Ferraris"
 }
