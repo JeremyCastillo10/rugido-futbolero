@@ -134,6 +134,8 @@ def _partidos_espn(horas: int) -> list[dict]:
                 "matchday": None,
                 "stage": None,
                 "fuente": "espn",
+                # Página del partido en ESPN: Facebook muestra su foto en la vista previa
+                "enlace_partido": ((ev.get("links") or [{}])[0].get("href")),
             })
     return salida
 
@@ -345,7 +347,8 @@ def main() -> None:
         noticias = noticias_partido(m)
         print(f"{len(noticias)} noticias del partido encontradas")
         cronica = escribir(m, noticias)
-        enlace = noticias[0]["enlace"] if noticias else None
+        # Prioridad: noticia del partido (foto del medio); si no hay, la página del partido en ESPN
+        enlace = noticias[0]["enlace"] if noticias else m.get("enlace_partido")
         png = None if enlace else imagen(m, cronica["titular"])
         (RAIZ / "out" / "cronica.txt").write_text(cronica["texto"], encoding="utf-8")
         print("\n" + cronica["titular"] + "\n\n" + cronica["texto"])
