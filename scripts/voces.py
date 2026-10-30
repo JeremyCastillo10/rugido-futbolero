@@ -2,10 +2,18 @@
 
 import base64
 import json
-import time
+import urllib.error
 import wave
 
-from comun import EPISODIO, PUBLIC, cargar_env, env, gemini
+from comun import EPISODIO, PUBLIC, CuotaDiaria, cargar_env, env, gemini
+
+MODELOS_TTS = [
+    "gemini-3.8-flash-tts",
+    "gemini-3.1-flash-tts-preview",
+    "gemini-2.5-flash-preview-tts",
+    "gemini-2.5-pro-preview-tts",
+    "gemini-3.8-flash-lite-tts",
+]
 
 VOCES = {
     "presentador": "Charon",  # informativo, grave
@@ -40,7 +48,8 @@ def guardar_wav(pcm: bytes, ruta) -> None:
 
 def main() -> None:
     cargar_env()
-    modelo = env("GEMINI_MODELO_TTS", "gemini-3.8-flash-tts")
+    # Cada modelo tiene su propio cupo diario gratis; al agotarse uno se pasa al siguiente
+    modelos = env("GEMINI_MODELOS_TTS", ",".join(MODELOS_TTS)).split(",")
     episodio = json.loads(EPISODIO.read_text(encoding="utf-8"))
     carpeta = PUBLIC / "audio"
     carpeta.mkdir(exist_ok=True)
@@ -50,10 +59,13 @@ def main() -> None:
     for i, escena in enumerate(episodio["escenas"]):
         p = escena["personaje"]
         indicacion = f"Dilo rápido, con ritmo ágil de video corto, {ACENTO[p]}{TONO.get(escena.get('gesto', 'normal'), '')}: {escena['texto']}"
-        for intento in range(4):
+        r = None
+        while r is None:
+            if not modelos:
+                raise SystemExit("Se agotó el cupo gratis de todos los modelos de voz por hoy")
             try:
                 r = gemini(
-                    modelo,
+                    modelos[0],
                     {
                         "contents": [{"parts": [{"text": indicacion}]}],
                         "generationConfig": {
@@ -64,12 +76,9 @@ def main() -> None:
                         },
                     },
                 )
-                break
-            except Exception as e:  # límite por minuto del plan gratis
-                print("reintentando:", e)
-                time.sleep(25 * (intento + 1))
-        else:
-            raise SystemExit("Gemini TTS no respondió")
+            except (CuotaDiaria, urllib.error.HTTPError) as e:
+                print(f"{modelos[0]} no disponible ({e}), probando el siguiente modelo")
+                modelos.pop(0)
 
         pcm = base64.b64decode(r["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
         archivo = carpeta / f"{i:02d}.wav"

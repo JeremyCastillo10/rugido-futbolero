@@ -4,73 +4,61 @@
   "escenas": [
     {
       "personaje": "presentador",
-      "texto": "¡Hola a todos! Bienvenidos a Fútbol Europeo Hoy con las noticias más picantes del continente.",
+      "texto": "¡Bienvenidos a Fútbol Europeo Hoy! Récords históricos, goleadas escandalosas y mucho pique sobre la mesa.",
       "gesto": "normal",
       "audio": "audio/00.wav"
     },
     {
       "personaje": "presentador",
-      "texto": "Kylian Mbappé alcanzó los cien goles con el Real Madrid, lográndolo más rápido que Cristiano Ronaldo.",
+      "titular": "1/3 · Mbappé llega a 100 goles",
+      "texto": "Kylian Mbappé alcanzó los cien goles en el Real Madrid, más rápido que Cristiano Ronaldo.",
       "gesto": "sorpresa",
-      "titular": "1/3 · Mbappé: 100 goles de blanco",
       "audio": "audio/01.wav"
     },
     {
       "personaje": "merengue",
-      "texto": "¡El heredero del trono! Don Kylian Mbappé destrozando récords. ¡Tiembla Europa, se viene otra Champions!",
+      "texto": "¡Una auténtica máquina! Kylian nació para reinar en el Bernabéu y levantar todas las Champions.",
       "gesto": "celebrar",
       "audio": "audio/02.wav"
     },
     {
       "personaje": "cule",
-      "texto": "Muchos goles, sí, pero el fútbol champagne y los valores jamás se compran a base de talonario.",
+      "texto": "Muy rápido corriendo al espacio, pero todavía le falta aprender a mimar el balón con calma.",
       "gesto": "burla",
       "audio": "audio/03.wav"
     },
     {
       "personaje": "presentador",
-      "texto": "El Barça femenino aplastó 0-8 al Köge danés en Champions League y mantiene un pleno perfecto de victorias.",
-      "gesto": "celebrar",
-      "titular": "2/3 · Festival culé en Champions",
+      "titular": "2/3 · Festival culé en Dinamarca",
+      "texto": "En Champions femenina, el Barcelona destrozó 0-8 al Köge danés con Aitana Bonmatí sumando minutos.",
+      "gesto": "normal",
       "audio": "audio/04.wav"
     },
     {
       "personaje": "cule",
-      "texto": "¡Eso sí que es poesía pura! Nueve puntos de nueve y Aitana Bonmatí dando cátedra mundial. ¡Imparables!",
+      "texto": "¡Ocho goles fuera de casa! Pleno de triunfos y cátedra de fútbol de nuestras campeonas.",
       "gesto": "celebrar",
       "audio": "audio/05.wav"
     },
     {
-      "personaje": "merengue",
-      "texto": "Felicidades por su fiesta en Dinamarca, avísenme cuando jueguen contra un rival de verdad.",
-      "gesto": "burla",
+      "personaje": "presentador",
+      "titular": "3/3 · Cristiano acecha los 1.000",
+      "texto": "Cristiano Ronaldo firmó un triplete en 15 minutos con Al Nassr y suma 985 goles oficiales.",
+      "gesto": "sorpresa",
       "audio": "audio/06.wav"
     },
     {
-      "personaje": "presentador",
-      "texto": "Cristiano Ronaldo anotó un triplete en quince minutos con Al Nassr y ya suma 985 goles oficiales.",
-      "gesto": "sorpresa",
-      "titular": "3/3 · Cristiano, a 15 de los mil",
+      "personaje": "merengue",
+      "texto": "¡Novecientos ochenta y cinco goles! Solo le faltan quince para el hito legendario. ¡Siuuu!",
+      "gesto": "celebrar",
       "audio": "audio/07.wav"
     },
     {
-      "personaje": "merengue",
-      "texto": "¡El Comandante está a quince goles de los mil! ¡Siuuu! ¡El mejor goleador de la historia viva!",
-      "gesto": "celebrar",
-      "audio": "audio/08.wav"
-    },
-    {
-      "personaje": "cule",
-      "texto": "En Arabia marca cualquiera, a mí no me engañan con esos números inflados.",
-      "gesto": "enojo",
-      "audio": "audio/09.wav"
-    },
-    {
       "personaje": "presentador",
-      "texto": "¿Llegará Cristiano a los mil goles esta misma temporada? ¡Déjanos tu opinión en comentarios y síguenos!",
+      "texto": "¿Crees que Cristiano Ronaldo alcanzará los mil goles oficiales esta temporada? ¡Comenta y síguenos!",
       "gesto": "normal",
-      "audio": "audio/10.wav"
+      "audio": "audio/08.wav"
     }
   ],
-  "caption": "¡Mbappé rompe récords con el Real Madrid y el Barça brilla en Champions!\nAdemás, Cristiano Ronaldo acecha la histórica marca de los mil goles tras un nuevo triplete.\n¿Llegará CR7 al millar de goles pronto?\n\n#Mbappe #RealMadrid #BarcaFemeni #CristianoRonaldo #FutbolEuropeo"
+  "caption": "¡Día de cifras históricas en el fútbol mundial! Mbappé hace historia de blanco y Cristiano acecha los 1.000 goles oficiales. ⚽🔥\n¿Llegará el Bicho a la cifra mítica este curso?\n#FutbolEuropeo #Mbappe #CristianoRonaldo #BarcaFemeni #RealMadrid"
 }

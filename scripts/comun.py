@@ -2,6 +2,8 @@
 
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -32,10 +34,30 @@ def http(url: str, datos: dict | bytes | None = None, headers: dict | None = Non
     cuerpo = json.dumps(datos).encode() if isinstance(datos, dict) else datos
     h = {"Content-Type": "application/json", "User-Agent": "futbol-animado"} | (headers or {})
     req = urllib.request.Request(url, data=cuerpo, headers=h, method=metodo)
-    with urllib.request.urlopen(req, timeout=180) as r:
+    with urllib.request.urlopen(req, timeout=120) as r:
         return json.loads(r.read().decode())
 
 
 def gemini(modelo: str, cuerpo: dict) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
-    return http(url, cuerpo, {"x-goog-api-key": env("GEMINI_API_KEY")})
+    # El plan gratis a veces tarda o limita por minuto: reintentar con espera
+    for intento in range(4):
+        try:
+            return http(url, cuerpo, {"x-goog-api-key": env("GEMINI_API_KEY")})
+        except urllib.error.HTTPError as e:
+            detalle = e.read().decode(errors="ignore")
+            if "PerDay" in detalle:
+                raise CuotaDiaria(modelo) from e
+            if e.code not in (429, 500, 503) or intento == 3:
+                raise
+            print(f"Gemini respondió {e.code}, reintentando...")
+        except (TimeoutError, urllib.error.URLError) as e:
+            if intento == 3:
+                raise
+            print(f"Gemini falló ({e}), reintentando...")
+        time.sleep(20 * (intento + 1))
+    raise AssertionError
+
+
+class CuotaDiaria(Exception):
+    """Se agotó el cupo gratis diario de ese modelo."""
