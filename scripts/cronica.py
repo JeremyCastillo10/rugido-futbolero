@@ -140,6 +140,33 @@ def _partidos_espn(horas: int) -> list[dict]:
     return salida
 
 
+# Código de football-data -> slug de ESPN
+SLUG_ESPN = {"PD": "esp.1", "PL": "eng.1", "SA": "ita.1", "BL1": "ger.1", "FL1": "fra.1", "CL": "uefa.champions"}
+
+
+def _enlace_espn(m: dict) -> str | None:
+    """Busca el partido en el marcador de ESPN (mismo día y equipos) y devuelve su página."""
+    liga = SLUG_ESPN.get(m["competition"].get("code"))
+    if not liga:
+        return None
+    dia = m["utcDate"][:10].replace("-", "")
+    try:
+        datos = http(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{liga}/scoreboard?dates={dia}")
+    except Exception as e:
+        print("espn enlace", e, file=sys.stderr)
+        return None
+    local, visita = alias(m["homeTeam"]), alias(m["awayTeam"])
+    for ev in datos.get("events", []):
+        comp = ev["competitions"][0]
+        equipos = {
+            c["homeAway"]: alias({"id": None, "name": c["team"]["displayName"], "shortName": c["team"].get("shortDisplayName")})
+            for c in comp["competitors"]
+        }
+        if equipos.get("home", set()) & local and equipos.get("away", set()) & visita:
+            return (ev.get("links") or [{}])[0].get("href")
+    return None
+
+
 def partidos_terminados(horas: int) -> list[dict]:
     """football-data primero; ESPN solo para los partidos que football-data no tenga."""
     partidos = _partidos_football_data(horas)
@@ -348,7 +375,7 @@ def main() -> None:
         print(f"{len(noticias)} noticias del partido encontradas")
         cronica = escribir(m, noticias)
         # Prioridad: noticia del partido (foto del medio); si no hay, la página del partido en ESPN
-        enlace = noticias[0]["enlace"] if noticias else m.get("enlace_partido")
+        enlace = noticias[0]["enlace"] if noticias else (m.get("enlace_partido") or _enlace_espn(m))
         png = None if enlace else imagen(m, cronica["titular"])
         (RAIZ / "out" / "cronica.txt").write_text(cronica["texto"], encoding="utf-8")
         print("\n" + cronica["titular"] + "\n\n" + cronica["texto"])
