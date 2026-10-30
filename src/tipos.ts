@@ -13,14 +13,15 @@ export type Gesto =
 type ConFoto = { jugador?: string; foto?: string; credito?: string };
 export type Visual =
   | ({ tipo: "gol"; goles: number } & ConFoto)
-  | {
+  | ({
       tipo: "marcador";
       local: string;
       visitante: string;
       golesLocal: number;
       golesVisitante: number;
       competicion?: string;
-    }
+      estadio?: string;
+    } & ConFoto)
   | ({ tipo: "dato"; numero: string; texto: string } & ConFoto)
   | ({ tipo: "jugador"; texto?: string } & ConFoto);
 

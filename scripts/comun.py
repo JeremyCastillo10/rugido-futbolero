@@ -38,21 +38,21 @@ def http(url: str, datos: dict | bytes | None = None, headers: dict | None = Non
         return json.loads(r.read().decode())
 
 
-def gemini(modelo: str, cuerpo: dict) -> dict:
+def gemini(modelo: str, cuerpo: dict, reintentos: int = 4) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
     # El plan gratis a veces tarda o limita por minuto: reintentar con espera
-    for intento in range(4):
+    for intento in range(reintentos):
         try:
             return http(url, cuerpo, {"x-goog-api-key": env("GEMINI_API_KEY")})
         except urllib.error.HTTPError as e:
             detalle = e.read().decode(errors="ignore")
             if "PerDay" in detalle:
                 raise CuotaDiaria(modelo) from e
-            if e.code not in (429, 500, 503) or intento == 3:
+            if e.code not in (429, 500, 503) or intento == reintentos - 1:
                 raise
             print(f"Gemini respondió {e.code}, reintentando...")
         except (TimeoutError, urllib.error.URLError) as e:
-            if intento == 3:
+            if intento == reintentos - 1:
                 raise
             print(f"Gemini falló ({e}), reintentando...")
         time.sleep(20 * (intento + 1))

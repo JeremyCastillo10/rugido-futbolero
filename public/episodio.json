@@ -4,84 +4,131 @@
   "escenas": [
     {
       "personaje": "presentador",
-      "texto": "¡Bienvenidos a Fútbol Europeo Hoy! Récords históricos, goleadas escandalosas y mucho pique sobre la mesa.",
-      "gesto": "normal",
-      "audio": "audio/00.wav"
+      "texto": "¡Bienvenidos a Fútbol Europeo Hoy! Soy Leo Rugido y hoy tenemos un programa picante.",
+      "gesto": "normal"
+    },
+    {
+      "personaje": "merengue",
+      "texto": "¡Caliente como nuestras quince Champions! ¿Verdad, minino?",
+      "gesto": "burla"
     },
     {
       "personaje": "presentador",
-      "titular": "1/3 · Mbappé llega a 100 goles",
-      "texto": "Kylian Mbappé alcanzó los cien goles en el Real Madrid, más rápido que Cristiano Ronaldo.",
+      "texto": "Kylian Mbappé ya suma cien goles con el Real Madrid, más rápido que Cristiano Ronaldo.",
       "gesto": "sorpresa",
-      "audio": "audio/01.wav",
+      "titular": "1/4 · Mbappé llega a los 100 goles",
       "visual": {
-        "tipo": "dato",
-        "numero": "100",
-        "texto": "goles con el Madrid",
+        "tipo": "jugador",
         "jugador": "Kylian Mbappé",
-        "foto": "fotos/01.jpg",
+        "texto": "100 goles en el Real Madrid",
+        "foto": "fotos/02.jpg",
         "credito": "Foto: Bryan Berlin · CC BY-SA 4.0"
       }
     },
     {
       "personaje": "merengue",
-      "texto": "¡Una auténtica máquina! Kylian nació para reinar en el Bernabéu y levantar todas las Champions.",
-      "gesto": "celebrar",
-      "audio": "audio/02.wav"
+      "texto": "¡Cien goles de pura clase! El Rey de Europa no perdona jamás.",
+      "gesto": "celebrar"
     },
     {
       "personaje": "cule",
-      "texto": "Muy rápido corriendo al espacio, pero todavía le falta aprender a mimar el balón con calma.",
-      "gesto": "burla",
-      "audio": "audio/03.wav"
+      "texto": "Cien goles sin ADN, amigo. Eso es solo correr y empujar balones.",
+      "gesto": "burla"
+    },
+    {
+      "personaje": "merengue",
+      "texto": "¡Correr directo a la gloria mientras tú cuentas la posesión!",
+      "gesto": "enojo"
     },
     {
       "personaje": "presentador",
-      "titular": "2/3 · Festival culé en Dinamarca",
-      "texto": "En Champions femenina, el Barcelona destrozó 0-8 al Köge danés con Aitana Bonmatí sumando minutos.",
+      "texto": "En la Champions femenina, el Barcelona goleó cero a ocho al HB Köge danés.",
       "gesto": "normal",
-      "audio": "audio/04.wav",
+      "titular": "2/4 · Paseo del Barça Femenino (0-8)",
       "visual": {
         "tipo": "marcador",
-        "local": "Køge",
-        "visitante": "Barcelona",
+        "local": "HB Köge",
+        "visitante": "FC Barcelona",
         "golesLocal": 0,
         "golesVisitante": 8,
-        "competicion": "Champions femenina"
+        "competicion": "Champions League Femenina",
+        "estadio": "Køge Stadion",
+        "foto": "fotos/06.jpg",
+        "credito": "Foto: Tøndemageren · CC BY-SA 4.0"
       }
     },
     {
       "personaje": "cule",
-      "texto": "¡Ocho goles fuera de casa! Pleno de triunfos y cátedra de fútbol de nuestras campeonas.",
-      "gesto": "celebrar",
-      "audio": "audio/05.wav"
+      "texto": "¡Eso es poesía pura! Triunfo del fútbol bonito, de La Masia y del estilo.",
+      "gesto": "celebrar"
+    },
+    {
+      "personaje": "merengue",
+      "texto": "Jugasteis en césped artificial, ¡así cualquiera mete ocho goles sin despeinarse!",
+      "gesto": "burla"
     },
     {
       "personaje": "presentador",
-      "titular": "3/3 · Cristiano acecha los 1.000",
-      "texto": "Cristiano Ronaldo firmó un triplete en 15 minutos con Al Nassr y suma 985 goles oficiales.",
-      "gesto": "sorpresa",
-      "audio": "audio/06.wav",
+      "texto": "Cristiano Ronaldo logró un triplete en quince minutos con Al Nassr y suma 985 goles.",
+      "gesto": "normal",
+      "titular": "3/4 · Ronaldo roza los 1.000 goles",
       "visual": {
-        "tipo": "gol",
-        "goles": 3,
+        "tipo": "dato",
+        "numero": "985",
+        "texto": "goles oficiales",
         "jugador": "Cristiano Ronaldo",
-        "foto": "fotos/06.jpg",
+        "foto": "fotos/09.jpg",
         "credito": "Foto: Bryan Berlin · CC BY-SA 4.0"
       }
     },
     {
       "personaje": "merengue",
-      "texto": "¡Novecientos ochenta y cinco goles! Solo le faltan quince para el hito legendario. ¡Siuuu!",
-      "gesto": "celebrar",
-      "audio": "audio/07.wav"
+      "texto": "¡Novecientos ochenta y cinco! El Bicho es insuperable, aprendan lo que es un mito.",
+      "gesto": "celebrar"
+    },
+    {
+      "personaje": "cule",
+      "texto": "A mí háblame de Messi, que sigue dando cátedra en Miami sin tanta presunción.",
+      "gesto": "triste"
     },
     {
       "personaje": "presentador",
-      "texto": "¿Crees que Cristiano Ronaldo alcanzará los mil goles oficiales esta temporada? ¡Comenta y síguenos!",
+      "texto": "Carlo Ancelotti presentó la lista de Brasil para medirse a Japón y Singapur, convocando a Raphinha.",
       "gesto": "normal",
-      "audio": "audio/08.wav"
+      "titular": "4/4 · Ancelotti convoca con Brasil",
+      "visual": {
+        "tipo": "jugador",
+        "jugador": "Carlo Ancelotti",
+        "texto": "Lista de Brasil para noviembre",
+        "foto": "fotos/12.jpg",
+        "credito": "Foto: Bryan Berlin · CC BY-SA 4.0"
+      }
+    },
+    {
+      "personaje": "cule",
+      "texto": "¡Otra vez nos hacen viajar a Raphinha por todo el mundo! ¡Qué drama!",
+      "gesto": "enojo"
+    },
+    {
+      "personaje": "merengue",
+      "texto": "Carletto sabe elegir talento, ¡así aprende lo que es un vestuario ganador!",
+      "gesto": "risa"
+    },
+    {
+      "personaje": "cule",
+      "texto": "¡Tú solo sabes hablar de Champions antiguas y culpar al césped!",
+      "gesto": "enojo"
+    },
+    {
+      "personaje": "merengue",
+      "texto": "¡Y tú solo sabes llorar por el estilo mientras cuentas posesiones vacías!",
+      "gesto": "burla"
+    },
+    {
+      "personaje": "presentador",
+      "texto": "¡Señores, orden en el estudio! ¿Llegará CR7 a los mil goles? ¡Comentad y seguid la cuenta!",
+      "gesto": "enojo"
     }
   ],
-  "caption": "¡Día de cifras históricas en el fútbol mundial! Mbappé hace historia de blanco y Cristiano acecha los 1.000 goles oficiales. ⚽🔥\n¿Llegará el Bicho a la cifra mítica este curso?\n#FutbolEuropeo #Mbappe #CristianoRonaldo #BarcaFemeni #RealMadrid"
+  "caption": "¡Mbappé llega a los 100 goles, goleada culé en Champions Femenina y CR7 roza los 1.000! 🔥\n¿Llegará el Bicho a la cifra mítica? ¡Déjanos tu opinión en comentarios! 👇\n\n#FutbolEuropeo #Mbappe #CristianoRonaldo #Barca #RealMadrid"
 }

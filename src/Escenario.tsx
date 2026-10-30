@@ -1,7 +1,7 @@
 import React from "react";
 import { useThree } from "@react-three/fiber";
 import { interpolate, Easing } from "remotion";
-import { Muneco } from "./Muneco";
+import { Hincha } from "./Hincha";
 import { Leon } from "./Leon";
 import { Cancha } from "./Cancha";
 import { PERSONAJES, type Gesto, type Personaje } from "./tipos";
@@ -9,8 +9,8 @@ import { PERSONAJES, type Gesto, type Personaje } from "./tipos";
 type Toma = { x: number; y: number; dist: number };
 
 const tomaDe = (p: Personaje | null): Toma => {
-  if (!p || p === "presentador") return { x: 0, y: 1.5, dist: 13.5 };
-  return { x: PERSONAJES[p].x * 1.05, y: 1.15, dist: 7.4 };
+  if (!p || p === "presentador") return { x: 0, y: 1.45, dist: 14 };
+  return { x: PERSONAJES[p].x * 1.02, y: 1.35, dist: 8.8 };
 };
 
 const Camara: React.FC<{
@@ -117,7 +117,7 @@ export const Escenario: React.FC<{
       ))}
 
       {(Object.keys(PERSONAJES) as Personaje[]).map((p) => {
-        const Componente = p === "presentador" ? Leon : Muneco;
+        const Componente = p === "presentador" ? Leon : Hincha;
         return (
           <Componente
             key={p}

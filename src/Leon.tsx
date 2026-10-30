@@ -9,16 +9,17 @@ const MELENA = ["#8a3f1c", "#a8522a", "#6e3015"];
 const CABEZA_Y = 1.95;
 const FZ = 0.5; // cara frontal de la cabeza
 
-// Mechones de la melena alrededor de la cabeza (fijos para que no cambien entre frames)
-const MECHONES: { p: V3; s: number; c: string }[] = Array.from({ length: 22 }, (_, i) => {
-  const a = (i / 22) * Math.PI * 2;
-  const r = 0.82 + (i % 3) * 0.07;
-  return {
-    p: [Math.cos(a) * r, Math.sin(a) * r * 0.95 + 0.05, -0.12 - (i % 2) * 0.08],
-    s: 0.36 + (i % 4) * 0.05,
-    c: MELENA[i % 3],
-  };
-});
+// Melena en dos anillos ordenados alrededor de la cara (fija entre frames)
+const MECHONES: { p: V3; s: number; c: string }[] = [
+  ...Array.from({ length: 16 }, (_, i) => {
+    const a = (i / 16) * Math.PI * 2;
+    return { p: [Math.cos(a) * 0.78, Math.sin(a) * 0.72 + 0.04, -0.15] as V3, s: 0.42, c: MELENA[i % 2] };
+  }),
+  ...Array.from({ length: 12 }, (_, i) => {
+    const a = ((i + 0.5) / 12) * Math.PI * 2;
+    return { p: [Math.cos(a) * 0.98, Math.sin(a) * 0.9 + 0.04, -0.3] as V3, s: 0.36, c: MELENA[2] };
+  }),
+];
 
 // Presentador: león voxel con sudadera negra
 export const Leon: React.FC<MunecoProps> = (props) => {
@@ -52,10 +53,13 @@ export const Leon: React.FC<MunecoProps> = (props) => {
         </group>
       ))}
 
+      {/* Cuello */}
+      <Caja p={[0, 1.42, 0]} s={[0.5, 0.2, 0.45]} c={PIEL} />
+
       {/* Cabeza */}
       <group position={[0, CABEZA_Y, 0]} rotation={[p.rotX, 0, p.rotZ]}>
         {/* Melena */}
-        <Caja p={[0, 0.05, -0.32]} s={[1.75, 1.65, 0.5]} c={MELENA[0]} />
+        <Caja p={[0, 0.04, -0.38]} s={[1.9, 1.75, 0.4]} c={MELENA[2]} />
         {MECHONES.map((m, i) => (
           <Caja key={i} p={m.p} s={[m.s, m.s, m.s]} c={m.c} />
         ))}

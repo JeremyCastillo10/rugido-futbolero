@@ -66,12 +66,16 @@ def main() -> None:
 
     for i, escena in enumerate(episodio["escenas"]):
         visual = escena.get("visual")
-        if not visual or not visual.get("jugador"):
+        if not visual:
+            continue
+        # Foto del jugador, o del estadio para los marcadores
+        tema = visual.get("jugador") or visual.get("estadio")
+        if not tema:
             continue
         try:
-            foto = foto_libre(visual["jugador"])
+            foto = foto_libre(tema)
         except Exception as e:
-            print(f"  {visual['jugador']}: error buscando foto ({e})")
+            print(f"  {tema}: error buscando foto ({e})")
             foto = None
         if not foto:
             continue
@@ -81,7 +85,7 @@ def main() -> None:
             archivo.write_bytes(r.read())
         visual["foto"] = f"fotos/{archivo.name}"
         visual["credito"] = foto["credito"]
-        print(f"{archivo.name}  {visual['jugador']}  ({foto['credito']})")
+        print(f"{archivo.name}  {tema}  ({foto['credito']})")
 
     EPISODIO.write_text(json.dumps(episodio, ensure_ascii=False, indent=2), encoding="utf-8")
 

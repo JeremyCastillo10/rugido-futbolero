@@ -138,7 +138,43 @@ export const Noticiero: React.FC<NoticieroProps> = ({
         </AbsoluteFill>
       )}
 
-      <Html5Audio src={staticFile("musica.wav")} loop volume={0.12} />
+      {/* Música: fuerte en intro y cierre, baja mientras hablan */}
+      <Html5Audio
+        src={staticFile("musica.wav")}
+        loop
+        volume={(f) =>
+          interpolate(f, [0, INTRO - 10, INTRO + 5, acc - 5, acc + 10], [0.4, 0.4, 0.08, 0.08, 0.4], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          })
+        }
+      />
+
+      {/* Efectos: barrido al abrir cada noticia, golpe al mostrar datos, público en cada gol */}
+      {escenas.map((e, k) => (
+        <React.Fragment key={`fx${k}`}>
+          {e.titular && (
+            <Sequence from={Math.max(0, inicios[k] - 6)} durationInFrames={20}>
+              <Html5Audio src={staticFile("whoosh.wav")} volume={0.5} />
+            </Sequence>
+          )}
+          {e.visual && e.visual.tipo !== "gol" && (
+            <Sequence from={inicios[k] + 6} durationInFrames={21}>
+              <Html5Audio src={staticFile("golpe.wav")} volume={0.45} />
+            </Sequence>
+          )}
+          {e.visual?.tipo === "gol" &&
+            Array.from({ length: Math.max(1, Math.min(5, e.visual.goles)) }, (_, g, arr) => (
+              <Sequence
+                key={g}
+                from={inicios[k] + Math.round((duraciones[k] / arr.length) * (g + 0.53))}
+                durationInFrames={90}
+              >
+                <Html5Audio src={staticFile("publico.wav")} volume={0.35} />
+              </Sequence>
+            ))}
+        </React.Fragment>
+      ))}
 
       {/* Cabecera */}
       <div
