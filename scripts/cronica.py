@@ -3,6 +3,7 @@
 Uso:
   python scripts/cronica.py           revisa partidos de las últimas 30 horas y publica los nuevos
   python scripts/cronica.py --prueba  genera imagen y texto del último partido sin publicar
+  python scripts/cronica.py --ultimo  publica la crónica del último partido aunque sea de hace días
 """
 
 import json
@@ -141,9 +142,10 @@ def imagen(m: dict, titular: str) -> object:
 def main() -> None:
     cargar_env()
     prueba = "--prueba" in sys.argv
+    ultimo = "--ultimo" in sys.argv
     publicadas = cargar_publicadas()
-    partidos = partidos_terminados(30 if not prueba else 24 * 10)
-    if prueba:
+    partidos = partidos_terminados(24 * 10 if prueba or ultimo else 30)
+    if prueba or ultimo:
         partidos = sorted(partidos, key=lambda m: m["utcDate"])[-1:]
     else:
         partidos = [m for m in partidos if m["id"] not in publicadas]
