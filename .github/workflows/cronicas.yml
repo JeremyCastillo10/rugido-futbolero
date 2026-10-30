@@ -24,6 +24,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # Diagnóstico: partidos de ayer y hoy tal como los devuelve football-data (cualquier estado)
+      - name: Diagnóstico de partidos
+        run: |
+          cd scripts && python -c "
+          import comun
+          from datetime import datetime, timedelta, timezone
+          import cronica
+          comun.cargar_env()
+          hoy = datetime.now(timezone.utc).date()
+          desde = (hoy - timedelta(days=1)).isoformat()
+          datos = comun.http(
+              f'https://api.football-data.org/v4/matches?competitions=PD,PL,SA,BL1,FL1,CL&dateFrom={desde}&dateTo={hoy.isoformat()}',
+              headers={'X-Auth-Token': comun.env('FOOTBALL_DATA_KEY')},
+          )
+          print('publicadas:', cronica.cargar_publicadas())
+          for m in datos.get('matches', []):
+              print(m['competition']['code'], m['status'], m['utcDate'], m['homeTeam']['name'], '-', m['awayTeam']['name'], 'id', m['id'])
+          print('total partidos:', len(datos.get('matches', [])))
+          "
       # Primero se revisa si hay partido nuevo; Node y Chrome solo se instalan si hace falta
       - name: ¿Hay partido nuevo?
         id: revisar
