@@ -73,6 +73,9 @@ def main() -> None:
         while pcm is None:
             if not modelos:
                 raise SystemExit("Se agotó el cupo gratis de todos los modelos de voz por hoy")
+            # Los modelos "lite" leen en voz alta cualquier instrucción: a esos solo el texto
+            if "lite" in modelos[0]:
+                con_estilo = False
             try:
                 r = gemini(
                     modelos[0],

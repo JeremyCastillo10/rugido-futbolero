@@ -1,0 +1,53 @@
+name: Crónicas de partidos
+
+on:
+  schedule:
+    # Varias revisiones por la tarde y noche de Europa (hora UTC)
+    - cron: "15 15,17,19,21,23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cronica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Primero se revisa si hay partido nuevo; Node y Chrome solo se instalan si hace falta
+      - name: ¿Hay partido nuevo?
+        id: revisar
+        run: |
+          cd scripts && python -c "
+          import cronica, comun
+          comun.cargar_env()
+          nuevos = [m for m in cronica.partidos_terminados(30) if m['id'] not in cronica.cargar_publicadas()]
+          print('nuevos=' + ('si' if nuevos else 'no'))
+          " >> $GITHUB_OUTPUT
+      - uses: actions/setup-node@v4
+        if: steps.revisar.outputs.nuevos == 'si'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Preparar render
+        if: steps.revisar.outputs.nuevos == 'si'
+        run: npm ci && npx remotion browser ensure
+      - name: Escribir y publicar crónica
+        if: steps.revisar.outputs.nuevos == 'si' && env.FB_PAGE_TOKEN != ''
+        run: python scripts/cronica.py
+      - name: Guardar partidos ya publicados
+        if: steps.revisar.outputs.nuevos == 'si'
+        run: |
+          git config user.name "rugido-bot"
+          git config user.email "rugido-bot@users.noreply.github.com"
+          git add data/cronicas_publicadas.json
+          git diff --cached --quiet || (git commit -m "Crónica publicada" && git push)

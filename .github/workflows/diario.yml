@@ -20,6 +20,8 @@ jobs:
       FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -50,3 +52,6 @@ jobs:
       - name: Publicar en Instagram
         if: github.event_name == 'schedule' || inputs.publicar
         run: python scripts/publicar.py
+      - name: Publicar en Facebook
+        if: (github.event_name == 'schedule' || inputs.publicar) && env.FB_PAGE_TOKEN != ''
+        run: python scripts/facebook.py reel

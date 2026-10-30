@@ -3,6 +3,7 @@ import { Composition, staticFile, type CalculateMetadataFunction } from "remotio
 import { getAudioData } from "@remotion/media-utils";
 import { Noticiero } from "./Noticiero";
 import { Avatar } from "./Avatar";
+import { Cronica, type CronicaProps } from "./Cronica";
 import { FPS, INTRO, OUTRO, PAUSA, VELOCIDAD, type Episodio, type NoticieroProps } from "./tipos";
 
 // Volumen por frame normalizado a 0..1
@@ -51,6 +52,21 @@ const calcularMetadata: CalculateMetadataFunction<NoticieroProps> = async ({ pro
 export const RemotionRoot: React.FC = () => (
   <>
   <Composition id="Avatar" component={Avatar} width={1080} height={1080} fps={FPS} durationInFrames={1} />
+  <Composition
+    id="Cronica"
+    component={Cronica}
+    width={1080}
+    height={1350}
+    fps={FPS}
+    durationInFrames={1}
+    defaultProps={{ local: "", visitante: "", golesLocal: 0, golesVisitante: 0, competicion: "", fecha: "", titular: "" } as CronicaProps}
+    calculateMetadata={async ({ props }) => ({
+      // public/cronica.json lo escribe scripts/cronica.py; sin él se usan los props por defecto
+      props: (await fetch(staticFile("cronica.json"))
+        .then((r) => r.json())
+        .catch(() => props)) as CronicaProps,
+    })}
+  />
   <Composition
     id="Noticiero"
     component={Noticiero}
