@@ -12,7 +12,9 @@ import {
 import { ThreeCanvas } from "@remotion/three";
 import { loadFont } from "@remotion/google-fonts/Rubik";
 import { Escenario } from "./Escenario";
-import { INTRO, PERSONAJES, VELOCIDAD, type NoticieroProps } from "./tipos";
+import { TarjetaVisual } from "./Visuales";
+import { tiroActual } from "./Cancha";
+import { CUENTA, INTRO, PERSONAJES, VELOCIDAD, type NoticieroProps } from "./tipos";
 
 const { fontFamily } = loadFont("normal", { weights: ["700", "900"] });
 
@@ -39,10 +41,17 @@ export const Noticiero: React.FC<NoticieroProps> = ({
   for (let k = 0; k < escenas.length; k++) {
     if (frame >= inicios[k]) i = k;
   }
-  const escena = i >= 0 ? escenas[i] : null;
+  // Después de la última escena: cierre con "Síguenos"
+  const enOutro = frame >= acc;
+  const tOutro = frame - acc;
+  const escena = i >= 0 && !enOutro ? escenas[i] : null;
   const t = i >= 0 ? frame - inicios[i] : frame;
-  const boca = i >= 0 ? (envolventes[i]?.[t] ?? 0) : 0;
-  const anterior = i > 0 ? escenas[i - 1].personaje : null;
+  const boca = escena ? (envolventes[i]?.[t] ?? 0) : 0;
+  const anterior = enOutro ? escenas[escenas.length - 1].personaje : i > 0 ? escenas[i - 1].personaje : null;
+  const visual = escena?.visual;
+  const goles =
+    visual?.tipo === "gol" ? { cantidad: Math.max(1, Math.min(5, visual.goles)), dur: duraciones[i] } : undefined;
+  const golActual = goles ? tiroActual(t, goles.dur, goles.cantidad) : null;
 
   // El titular se mantiene hasta que aparece otro
   let titular: string | undefined;
@@ -70,13 +79,66 @@ export const Noticiero: React.FC<NoticieroProps> = ({
       <ThreeCanvas width={width} height={height} camera={{ fov: 42, position: [0, 2.6, 11] }}>
         <Escenario
           frame={frame}
-          hablando={escena?.personaje ?? null}
+          hablando={enOutro ? "presentador" : (escena?.personaje ?? null)}
           anterior={anterior}
-          gesto={escena?.gesto ?? "normal"}
+          gesto={enOutro ? "celebrar" : (escena?.gesto ?? "normal")}
           boca={boca}
-          t={i >= 0 ? t : 999}
+          t={enOutro ? tOutro : i >= 0 ? t : 999}
+          goles={goles}
         />
       </ThreeCanvas>
+
+      {visual && <TarjetaVisual visual={visual} t={t} dur={dur} />}
+
+      {golActual && golActual.p > 0.55 && golActual.p < 0.92 && (
+        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", top: -120 }}>
+          <div
+            style={{
+              fontSize: 170,
+              fontWeight: 900,
+              color: "#ffd166",
+              textShadow: "0 12px 0 #000",
+              transform: `scale(${spring({ frame: Math.round((golActual.p - 0.55) * dur / goles!.cantidad), fps, config: { damping: 8 } })}) rotate(-6deg)`,
+            }}
+          >
+            ¡GOOOL!
+          </div>
+        </AbsoluteFill>
+      )}
+
+      {enOutro && (
+        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", top: 520 }}>
+          <div
+            style={{
+              transform: `scale(${spring({ frame: tOutro, fps, config: { damping: 10 } })})`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <div style={{ fontSize: 80, fontWeight: 900, color: "white", textShadow: contorno }}>
+              ¡Síguenos!
+            </div>
+            <div
+              style={{
+                background: "#ffd166",
+                color: "#0b1230",
+                fontWeight: 900,
+                fontSize: 64,
+                padding: "14px 34px",
+                borderRadius: 20,
+                border: "6px solid #0b1230",
+                boxShadow: "0 10px 0 #0b1230",
+              }}
+            >
+              {CUENTA}
+            </div>
+          </div>
+        </AbsoluteFill>
+      )}
+
+      <Html5Audio src={staticFile("musica.wav")} loop volume={0.12} />
 
       {/* Cabecera */}
       <div
@@ -159,7 +221,7 @@ export const Noticiero: React.FC<NoticieroProps> = ({
       )}
 
       {/* Titular de la noticia */}
-      {titular && (
+      {titular && !enOutro && (
         <div
           style={{
             position: "absolute",

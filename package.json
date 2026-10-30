@@ -8,7 +8,8 @@
     "voces": "python scripts/voces.py",
     "render": "remotion render Noticiero out/episodio.mp4",
     "publicar": "python scripts/publicar.py",
-    "episodio": "npm run guion && npm run voces && npm run render"
+    "fotos": "python scripts/fotos.py",
+    "episodio": "npm run guion && npm run fotos && npm run voces && npm run render"
   },
   "keywords": [],
   "author": "",

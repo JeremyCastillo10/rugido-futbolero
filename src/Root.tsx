@@ -3,7 +3,7 @@ import { Composition, staticFile, type CalculateMetadataFunction } from "remotio
 import { getAudioData } from "@remotion/media-utils";
 import { Noticiero } from "./Noticiero";
 import { Avatar } from "./Avatar";
-import { FPS, INTRO, PAUSA, VELOCIDAD, type Episodio, type NoticieroProps } from "./tipos";
+import { FPS, INTRO, OUTRO, PAUSA, VELOCIDAD, type Episodio, type NoticieroProps } from "./tipos";
 
 // Volumen por frame normalizado a 0..1
 const envolvente = (canal: Float32Array, sampleRate: number): number[] => {
@@ -43,7 +43,7 @@ const calcularMetadata: CalculateMetadataFunction<NoticieroProps> = async ({ pro
   }
 
   return {
-    durationInFrames: INTRO + duraciones.reduce((a, b) => a + b, 0),
+    durationInFrames: INTRO + duraciones.reduce((a, b) => a + b, 0) + OUTRO,
     props: { episodio, duraciones, envolventes },
   };
 };

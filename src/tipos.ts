@@ -9,7 +9,23 @@ export type Gesto =
   | "celebrar"
   | "sorpresa";
 
+// Apoyo visual de la noticia; foto y crédito los agrega scripts/fotos.py
+type ConFoto = { jugador?: string; foto?: string; credito?: string };
+export type Visual =
+  | ({ tipo: "gol"; goles: number } & ConFoto)
+  | {
+      tipo: "marcador";
+      local: string;
+      visitante: string;
+      golesLocal: number;
+      golesVisitante: number;
+      competicion?: string;
+    }
+  | ({ tipo: "dato"; numero: string; texto: string } & ConFoto)
+  | ({ tipo: "jugador"; texto?: string } & ConFoto);
+
 export type Escena = {
+  visual?: Visual;
   personaje: Personaje;
   texto: string;
   gesto?: Gesto;
@@ -37,13 +53,15 @@ export const PERSONAJES: Record<
   Personaje,
   { nombre: string; color: string; x: number; z: number }
 > = {
-  merengue: { nombre: "Merenguito", color: "#f4f1ea", x: -1.85, z: 0 },
+  merengue: { nombre: "Merenguito", color: "#f4f1ea", x: -2.3, z: 0 },
   presentador: { nombre: "Leo Rugido", color: "#f0a04b", x: 0, z: -0.35 },
-  cule: { nombre: "Culerín", color: "#e3245e", x: 1.85, z: 0 },
+  cule: { nombre: "Culerín", color: "#e3245e", x: 2.3, z: 0 },
 };
 
+export const CUENTA = "@rugidofutbolero_";
 export const FPS = 30;
 export const INTRO = 45;
+export const OUTRO = 75;
 export const PAUSA = 6;
 // Las voces de Gemini son lentas; se aceleran sin cambiar el tono
 export const VELOCIDAD = 1.15;

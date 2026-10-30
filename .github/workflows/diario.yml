@@ -34,6 +34,8 @@ jobs:
         run: npx remotion browser ensure
       - name: Guion
         run: python scripts/guion.py
+      - name: Fotos libres
+        run: python scripts/fotos.py
       - name: Voces
         run: python scripts/voces.py
       - name: Render

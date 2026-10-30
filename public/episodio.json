@@ -13,7 +13,15 @@
       "titular": "1/3 · Mbappé llega a 100 goles",
       "texto": "Kylian Mbappé alcanzó los cien goles en el Real Madrid, más rápido que Cristiano Ronaldo.",
       "gesto": "sorpresa",
-      "audio": "audio/01.wav"
+      "audio": "audio/01.wav",
+      "visual": {
+        "tipo": "dato",
+        "numero": "100",
+        "texto": "goles con el Madrid",
+        "jugador": "Kylian Mbappé",
+        "foto": "fotos/01.jpg",
+        "credito": "Foto: Bryan Berlin · CC BY-SA 4.0"
+      }
     },
     {
       "personaje": "merengue",
@@ -32,7 +40,15 @@
       "titular": "2/3 · Festival culé en Dinamarca",
       "texto": "En Champions femenina, el Barcelona destrozó 0-8 al Köge danés con Aitana Bonmatí sumando minutos.",
       "gesto": "normal",
-      "audio": "audio/04.wav"
+      "audio": "audio/04.wav",
+      "visual": {
+        "tipo": "marcador",
+        "local": "Køge",
+        "visitante": "Barcelona",
+        "golesLocal": 0,
+        "golesVisitante": 8,
+        "competicion": "Champions femenina"
+      }
     },
     {
       "personaje": "cule",
@@ -45,7 +61,14 @@
       "titular": "3/3 · Cristiano acecha los 1.000",
       "texto": "Cristiano Ronaldo firmó un triplete en 15 minutos con Al Nassr y suma 985 goles oficiales.",
       "gesto": "sorpresa",
-      "audio": "audio/06.wav"
+      "audio": "audio/06.wav",
+      "visual": {
+        "tipo": "gol",
+        "goles": 3,
+        "jugador": "Cristiano Ronaldo",
+        "foto": "fotos/06.jpg",
+        "credito": "Foto: Bryan Berlin · CC BY-SA 4.0"
+      }
     },
     {
       "personaje": "merengue",

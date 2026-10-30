@@ -3,13 +3,14 @@ import { useThree } from "@react-three/fiber";
 import { interpolate, Easing } from "remotion";
 import { Muneco } from "./Muneco";
 import { Leon } from "./Leon";
+import { Cancha } from "./Cancha";
 import { PERSONAJES, type Gesto, type Personaje } from "./tipos";
 
 type Toma = { x: number; y: number; dist: number };
 
 const tomaDe = (p: Personaje | null): Toma => {
-  if (!p || p === "presentador") return { x: 0, y: 1.5, dist: 12 };
-  return { x: PERSONAJES[p].x * 0.8, y: 1.2, dist: 8.2 };
+  if (!p || p === "presentador") return { x: 0, y: 1.5, dist: 13.5 };
+  return { x: PERSONAJES[p].x * 1.05, y: 1.15, dist: 7.4 };
 };
 
 const Camara: React.FC<{
@@ -61,18 +62,26 @@ export const Escenario: React.FC<{
   gesto: Gesto;
   boca: number;
   t: number;
-}> = ({ frame, hablando, anterior, gesto, boca, t }) => {
+  // Si la escena es de goles, la cámara va a la cancha
+  goles?: { cantidad: number; dur: number };
+}> = ({ frame, hablando, anterior, gesto, boca, t, goles }) => {
   const mirarX = hablando ? PERSONAJES[hablando].x : 0;
   return (
     <>
       <color attach="background" args={["#0b1230"]} />
-      <fog attach="fog" args={["#0b1230", 9, 22]} />
+      <fog attach="fog" args={["#0b1230", 9, 24]} />
       <ambientLight intensity={0.75} />
       <directionalLight position={[2, 6, 6]} intensity={1.6} />
       <pointLight position={[-4, 3, 2]} intensity={25} color="#9d4edd" />
       <pointLight position={[4, 3, 2]} intensity={25} color="#3a86ff" />
 
-      <Camara antes={anterior} ahora={hablando} t={t} />
+      {goles ? null : <Camara antes={anterior} ahora={hablando} t={t} />}
+      <Cancha
+        t={t}
+        dur={goles?.dur ?? 1}
+        goles={goles?.cantidad ?? 1}
+        activa={Boolean(goles)}
+      />
 
       {/* Pared y pantalla del estudio */}
       <mesh position={[0, 3, -3.2]}>
@@ -149,11 +158,11 @@ export const Escenario: React.FC<{
 
       {/* Mesa del noticiero */}
       <mesh position={[0, 0.32, 1.15]}>
-        <boxGeometry args={[6.8, 0.64, 0.9]} />
+        <boxGeometry args={[7.8, 0.64, 0.9]} />
         <meshStandardMaterial color="#1d3557" flatShading />
       </mesh>
       <mesh position={[0, 0.66, 1.15]}>
-        <boxGeometry args={[7.0, 0.08, 1.0]} />
+        <boxGeometry args={[8.0, 0.08, 1.0]} />
         <meshStandardMaterial color="#e63946" flatShading />
       </mesh>
       <mesh position={[0, 0.32, 1.61]}>

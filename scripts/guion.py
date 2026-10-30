@@ -38,9 +38,15 @@ Reglas:
 7. "titular" solo en la escena del presentador que abre cada noticia, formato "1/3 · Texto corto" (máx 45 caracteres).
 8. gesto: uno de normal, burla, enojo, risa, triste, celebrar, sorpresa.
 9. Escribe también "caption" para Instagram (2-3 líneas + 5 hashtags).
+10. En cada escena del presentador que abre una noticia agrega "visual" para ilustrarla, con datos SOLO de los DATOS:
+   - Si hubo goles de un jugador: {"tipo":"gol","goles":N,"jugador":"Nombre Apellido"} (N = goles que marcó, máx 5)
+   - Si es un resultado de partido: {"tipo":"marcador","local":"Equipo","visitante":"Equipo","golesLocal":N,"golesVisitante":N,"competicion":"Liga"}
+   - Si la noticia es una cifra: {"tipo":"dato","numero":"985","texto":"goles oficiales","jugador":"Nombre Apellido (opcional)"}
+   - Si trata de un jugador concreto: {"tipo":"jugador","jugador":"Nombre Apellido","texto":"frase corta"}
+   Usa nombres completos reales (como en Wikipedia) para que se pueda buscar su foto.
 
 Responde SOLO con JSON:
-{"escenas":[{"personaje":"presentador|merengue|cule","texto":"...","gesto":"...","titular":"opcional"}],"caption":"..."}"""
+{"escenas":[{"personaje":"presentador|merengue|cule","texto":"...","gesto":"...","titular":"opcional","visual":{...opcional}}],"caption":"..."}"""
 
 
 def partidos_de_ayer() -> list[str]:
