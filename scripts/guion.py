@@ -1,6 +1,8 @@
 """Junta resultados y titulares del día y le pide a Gemini (gratis) el guion del episodio."""
 
+import html
 import json
+import re
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta, timezone
@@ -77,6 +79,12 @@ def partidos_de_ayer() -> list[str]:
     return lineas
 
 
+def limpiar_html(texto: str) -> str:
+    """Quita etiquetas y entidades (&nbsp;, &amp;) de los titulares y resúmenes del feed."""
+    sin_etiquetas = re.sub(r"<[^>]+>", " ", texto)
+    return re.sub(r"\s+", " ", html.unescape(sin_etiquetas)).strip()
+
+
 def titulares(horas: int = 48) -> list[str]:
     """Solo titulares recientes (últimas 48 h), del más nuevo al más viejo.
 
@@ -92,7 +100,8 @@ def titulares(horas: int = 48) -> list[str]:
                 raiz = ET.fromstring(r.read())
             for item in raiz.iter("item"):
                 titulo = (item.findtext("title") or "").strip()
-                desc = (item.findtext("description") or "").strip()[:200]
+                desc = limpiar_html(item.findtext("description") or "")[:200]
+                titulo = limpiar_html(titulo)
                 fecha_txt = item.findtext("pubDate")
                 if not titulo or not fecha_txt:
                     continue
