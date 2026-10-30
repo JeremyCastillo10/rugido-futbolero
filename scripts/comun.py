@@ -38,12 +38,33 @@ def http(url: str, datos: dict | bytes | None = None, headers: dict | None = Non
         return json.loads(r.read().decode())
 
 
+# Cada clave de Gemini tiene su propio cupo diario por modelo. Se prueban en orden:
+# GEMINI_API_KEY y, si existe, GEMINI_API_KEY_2 (de otro proyecto).
+_agotadas: set[tuple[str, str]] = set()
+
+
 def gemini(modelo: str, cuerpo: dict, reintentos: int = 4) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+    env("GEMINI_API_KEY")  # debe existir la principal
+    claves = [
+        (nombre, os.environ[nombre])
+        for nombre in ("GEMINI_API_KEY", "GEMINI_API_KEY_2")
+        if os.environ.get(nombre) and (nombre, modelo) not in _agotadas
+    ]
+    for nombre, clave in claves:
+        try:
+            return _gemini_con_clave(url, modelo, cuerpo, clave, reintentos)
+        except CuotaDiaria:
+            _agotadas.add((nombre, modelo))
+            print(f"{nombre} sin cupo para {modelo}, probando la siguiente clave")
+    raise CuotaDiaria(modelo)
+
+
+def _gemini_con_clave(url: str, modelo: str, cuerpo: dict, clave: str, reintentos: int) -> dict:
     # El plan gratis a veces tarda o limita por minuto: reintentar con espera
     for intento in range(reintentos):
         try:
-            return http(url, cuerpo, {"x-goog-api-key": env("GEMINI_API_KEY")})
+            return http(url, cuerpo, {"x-goog-api-key": clave})
         except urllib.error.HTTPError as e:
             detalle = e.read().decode(errors="ignore")
             if "PerDay" in detalle:
