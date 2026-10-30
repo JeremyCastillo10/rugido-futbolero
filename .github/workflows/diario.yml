@@ -2,10 +2,14 @@ name: Episodio diario
 
 on:
   schedule:
-    # 12:00 UTC = 8:00 a.m. en República Dominicana
-    - cron: "0 12 * * *"
-    # 20:00 UTC = 4:00 p.m.: respaldo, solo genera si el de la mañana no se publicó
-    - cron: "0 20 * * *"
+    # Cada hora de 8:00 a. m. a 6:00 p. m. (hora de República Dominicana).
+    # Solo genera si hoy aún no se publicó, así que los reintentos no gastan cupo.
+    - cron: "0 12-22 * * *"
+
+# Una ejecución a la vez: si una tarda más de una hora, la siguiente espera
+concurrency:
+  group: episodio-diario
+  cancel-in-progress: false
   workflow_dispatch:
     inputs:
       publicar:
