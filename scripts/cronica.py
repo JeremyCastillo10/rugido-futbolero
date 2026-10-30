@@ -16,7 +16,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 import fotos
-from comun import PUBLIC, RAIZ, cargar_env, env, gemini, http
+from comun import PUBLIC, RAIZ, cargar_env, env, gemini, http, ordenar_hashtags
 import xml.etree.ElementTree as ET
 
 from guion import FEEDS, MODELOS_TEXTO, groq_texto
@@ -62,7 +62,9 @@ Estilo:
    Cierra con una frase final en mayúsculas celebrando o lamentando el resultado.
    Después, en una línea aparte, una reacción corta de Merenguito (hincha del Madrid) o Culerín (hincha del Barça)
    si el partido es de su equipo o de un rival directo; si no, omite la reacción.
-   Termina con 3-5 hashtags. No pongas enlaces.
+   Usa los nombres completos de los equipos y de los goleadores al menos una vez (así la gente lo encuentra al buscar).
+   Termina con 4 hashtags: los dos equipos, la competición y un goleador o #FutbolEuropeo.
+   Sin tildes ni espacios en los hashtags. No pongas enlaces.
 5. Nada ofensivo hacia jugadores, árbitros ni aficiones.
 
 Responde SOLO con JSON: {"titular": "...", "texto": "..."}"""
@@ -142,6 +144,20 @@ def _partidos_espn(horas: int) -> list[dict]:
 
 # Código de football-data -> slug de ESPN
 SLUG_ESPN = {"PD": "esp.1", "PL": "eng.1", "SA": "ita.1", "BL1": "ger.1", "FL1": "fra.1", "CL": "uefa.champions"}
+
+
+def texto_seo(m: dict, cronica: dict) -> str:
+    """Titular, línea de datos buscable (resultado y competición) y hashtags ordenados."""
+    ft = m["score"]["fullTime"]
+    datos = f"📊 {m['homeTeam']['name']} {ft['home']}-{ft['away']} {m['awayTeam']['name']} · {m['competition']['name']}"
+    texto = cronica["texto"].strip()
+    titular = cronica.get("titular", "").strip()
+    # La línea de datos va justo después del titular, que es lo primero que se ve
+    if titular and texto.startswith(titular):
+        texto = f"{titular}\n{datos}{texto[len(titular):]}"
+    else:
+        texto = f"{datos}\n\n{texto}"
+    return ordenar_hashtags(texto)
 
 
 def _coincide(nombres_a: set[str], nombres_b: set[str]) -> bool:
@@ -379,6 +395,7 @@ def main() -> None:
         noticias = noticias_partido(m)
         print(f"{len(noticias)} noticias del partido encontradas")
         cronica = escribir(m, noticias)
+        cronica["texto"] = texto_seo(m, cronica)
         # Prioridad: noticia del partido (foto del medio); si no hay, la página del partido en ESPN
         enlace = noticias[0]["enlace"] if noticias else (m.get("enlace_partido") or _enlace_espn(m))
         png = None if enlace else imagen(m, cronica["titular"])

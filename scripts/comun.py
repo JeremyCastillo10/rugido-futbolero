@@ -11,6 +11,28 @@ RAIZ = Path(__file__).resolve().parent.parent
 PUBLIC = RAIZ / "public"
 EPISODIO = PUBLIC / "episodio.json"
 
+MARCA = "#LeoRugido"
+MAX_HASHTAGS = 5  # Instagram recomienda pocos hashtags y relevantes
+
+
+def ordenar_hashtags(texto: str) -> str:
+    """Deja como máximo 5 hashtags al final, sin repetidos y siempre con la marca.
+
+    Los hashtags que el modelo escriba en medio del texto se quitan de ahí y se
+    juntan en la última línea, para que el texto se lea limpio.
+    """
+    import re
+
+    encontrados = re.findall(r"#\w+", texto)
+    limpio = re.sub(r"[ \t]*#\w+", "", texto)
+    limpio = re.sub(r"\n{3,}", "\n\n", limpio).strip()
+    unicos: list[str] = []
+    for h in encontrados:
+        if h.lower() != MARCA.lower() and h.lower() not in (u.lower() for u in unicos):
+            unicos.append(h)
+    etiquetas = unicos[: MAX_HASHTAGS - 1] + [MARCA]
+    return f"{limpio}\n\n{' '.join(etiquetas)}"
+
 
 def cargar_env() -> None:
     archivo = RAIZ / ".env"

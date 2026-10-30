@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
-from comun import EPISODIO, cargar_env, env, gemini, http
+from comun import EPISODIO, cargar_env, env, gemini, http, ordenar_hashtags
 
 # Feeds RSS de noticias de fútbol europeo; si alguno falla se ignora
 FEEDS = [
@@ -43,7 +43,14 @@ Reglas:
 6. Nada ofensivo, sin insultos a jugadores, árbitros ni aficiones.
 7. "titular" solo en la escena del presentador que abre cada noticia, formato "1/3 · Texto corto" (máx 45 caracteres).
 8. gesto: uno de normal, burla, enojo, risa, triste, celebrar, sorpresa.
-9. Escribe también "caption" para Instagram (2-3 líneas + 5 hashtags).
+9. Escribe también "caption" para Instagram y Facebook, pensado para que se encuentre en el buscador:
+   - Primera línea (máx 120 caracteres): las 3 noticias resumidas con nombres completos de equipos
+     y jugadores (ej. "Mbappé, Real Madrid y PSG: las noticias del fútbol europeo hoy").
+   - Segunda línea: una frase natural con palabras que la gente busca, como "noticias de fútbol",
+     "fútbol europeo", el nombre de la liga o competición de cada noticia.
+   - Tercera línea: una pregunta para que comenten (ej. "¿Quién gana el pique, Merenguito o Culerín?").
+   - Al final 4 hashtags concretos de ESTE episodio: equipos y jugadores de las noticias
+     y uno general (#FutbolEuropeo o #NoticiasDeFutbol). Sin tildes ni espacios en los hashtags.
 10. En cada escena del presentador que abre una noticia agrega "visual" para ilustrarla, con datos SOLO de los DATOS:
    - Si hubo goles de un jugador: {"tipo":"gol","goles":N,"jugador":"Nombre Apellido"} (N = goles que marcó, máx 5)
    - Si es un resultado de partido: {"tipo":"marcador","local":"Equipo","visitante":"Equipo","golesLocal":N,"golesVisitante":N,"competicion":"Liga"}
@@ -173,7 +180,7 @@ def main() -> None:
         "fecha": f"{hoy.day} {MESES[hoy.month - 1]}",
         "titulo": "FÚTBOL EUROPEO HOY",
         "escenas": guion["escenas"],
-        "caption": guion.get("caption", ""),
+        "caption": ordenar_hashtags(guion.get("caption", "")),
     }
     EPISODIO.write_text(json.dumps(episodio, ensure_ascii=False, indent=2), encoding="utf-8")
     for e in episodio["escenas"]:
