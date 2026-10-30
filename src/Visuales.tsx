@@ -89,20 +89,13 @@ export const TarjetaVisual: React.FC<{ visual: Visual; t: number; dur: number }>
       <div
         style={{
           width: 900,
-          // Foto libre del estadio de fondo, oscurecida para que se lea el marcador
-          backgroundColor: AZUL,
-          backgroundImage: visual.foto
-            ? `linear-gradient(rgba(11,18,48,.72), rgba(11,18,48,.88)), url(${staticFile(visual.foto)})`
-            : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          background: "rgba(11,18,48,.94)",
           border: `8px solid ${AMARILLO}`,
           borderRadius: 34,
           padding: "36px 44px",
           display: "flex",
           flexDirection: "column",
           gap: 26,
-          position: "relative",
         }}
       >
         <div style={{ display: "flex", justifyContent: "center" }}>
@@ -111,13 +104,8 @@ export const TarjetaVisual: React.FC<{ visual: Visual; t: number; dur: number }>
         {equipo(visual.local, visual.golesLocal)}
         {equipo(visual.visitante, visual.golesVisitante)}
         <div style={{ textAlign: "center", color: "rgba(255,255,255,.7)", fontSize: 32, fontWeight: 700 }}>
-          FINAL{visual.estadio ? ` · ${visual.estadio}` : ""}
+          FINAL
         </div>
-        {visual.credito && (
-          <div style={{ position: "absolute", bottom: -40, left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,.85)", fontSize: 22, fontWeight: 700 }}>
-            {visual.credito}
-          </div>
-        )}
       </div>
     );
   } else if (visual.tipo === "dato") {
