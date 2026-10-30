@@ -2,6 +2,7 @@
 
 import html
 import json
+import os
 import re
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -79,6 +80,22 @@ def partidos_de_ayer() -> list[str]:
     return lineas
 
 
+def groq_texto(sistema: str, usuario: str) -> str:
+    """Respaldo del guion con Groq (API compatible con OpenAI). Devuelve el JSON como texto."""
+    cuerpo = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.9,
+    }
+    respuesta = http(
+        "https://api.groq.com/openai/v1/chat/completions",
+        cuerpo,
+        {"Authorization": f"Bearer {env('GROQ_API_KEY')}"},
+    )
+    return respuesta["choices"][0]["message"]["content"]
+
+
 def limpiar_html(texto: str) -> str:
     """Quita etiquetas y entidades (&nbsp;, &amp;) de los titulares y resúmenes del feed."""
     sin_etiquetas = re.sub(r"<[^>]+>", " ", texto)
@@ -134,17 +151,21 @@ def main() -> None:
         "contents": [{"parts": [{"text": f"Fecha: {date.today().isoformat()}\n\nDATOS:\n{datos}"}]}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.9},
     }
-    respuesta = None
+    texto = None
     for modelo in env("GEMINI_MODELOS_TEXTO", ",".join(MODELOS_TEXTO)).split(","):
         try:
             print("Escribiendo guion con", modelo)
             respuesta = gemini(modelo, cuerpo, reintentos=2)
+            texto = respuesta["candidates"][0]["content"]["parts"][0]["text"]
             break
         except Exception as e:
             print(f"{modelo} no disponible ({e})")
-    if respuesta is None:
-        raise SystemExit("Ningún modelo de Gemini respondió")
-    texto = respuesta["candidates"][0]["content"]["parts"][0]["text"]
+    # Si Gemini no responde (caída o cupo), se intenta con Groq
+    if texto is None and os.environ.get("GROQ_API_KEY"):
+        print("Gemini no respondió; escribiendo guion con Groq")
+        texto = groq_texto(cuerpo["systemInstruction"]["parts"][0]["text"], cuerpo["contents"][0]["parts"][0]["text"])
+    if texto is None:
+        raise SystemExit("Ningún modelo de texto respondió (Gemini ni Groq)")
     guion = json.loads(texto)
 
     hoy = date.today()
