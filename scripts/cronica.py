@@ -7,6 +7,7 @@ Uso:
 """
 
 import json
+import os
 from email.utils import parsedate_to_datetime
 import subprocess
 import sys
@@ -18,7 +19,7 @@ import fotos
 from comun import PUBLIC, RAIZ, cargar_env, env, gemini, http
 import xml.etree.ElementTree as ET
 
-from guion import FEEDS, MODELOS_TEXTO
+from guion import FEEDS, MODELOS_TEXTO, groq_texto
 
 # IDs de football-data.org de los clubes que cubre la página, con los nombres que usa la prensa
 EQUIPOS = {
@@ -71,7 +72,7 @@ def cargar_publicadas() -> list[int]:
     return json.loads(PUBLICADAS.read_text()) if PUBLICADAS.exists() else []
 
 
-def partidos_terminados(horas: int) -> list[dict]:
+def _partidos_football_data(horas: int) -> list[dict]:
     """Una sola consulta para todas las ligas (el plan gratis permite 10 por minuto)."""
     desde = (datetime.now(timezone.utc) - timedelta(hours=horas)).date().isoformat()
     hasta = datetime.now(timezone.utc).date().isoformat()
@@ -86,10 +87,70 @@ def partidos_terminados(horas: int) -> list[dict]:
     ]
 
 
+# Respaldo: el endpoint público de ESPN (sin clave) para partidos que football-data no tenga
+ESPN_LIGAS = ["fra.1", "esp.1", "eng.1", "ger.1", "ita.1", "uefa.champions"]
+
+
+def _de_interes(equipo: dict) -> bool:
+    return any(alias(equipo) & grupo for grupo in EQUIPOS.values())
+
+
+def _partidos_espn(horas: int) -> list[dict]:
+    """Partidos terminados de ESPN, con la misma forma que los de football-data."""
+    ahora = datetime.now(timezone.utc)
+    rango = f"{(ahora - timedelta(hours=horas)):%Y%m%d}-{ahora:%Y%m%d}"
+    salida = []
+    for liga in ESPN_LIGAS:
+        try:
+            datos = http(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{liga}/scoreboard?dates={rango}")
+        except Exception as e:
+            print("espn", liga, e)
+            continue
+        nombre_liga = (datos.get("leagues") or [{}])[0].get("name", liga)
+        for ev in datos.get("events", []):
+            comp = ev["competitions"][0]
+            if not comp["status"]["type"].get("completed"):
+                continue
+            casa = next(c for c in comp["competitors"] if c["homeAway"] == "home")
+            fuera = next(c for c in comp["competitors"] if c["homeAway"] == "away")
+            equipo_casa = {"id": None, "name": casa["team"]["displayName"], "shortName": casa["team"].get("shortDisplayName")}
+            equipo_fuera = {"id": None, "name": fuera["team"]["displayName"], "shortName": fuera["team"].get("shortDisplayName")}
+            if not (_de_interes(equipo_casa) or _de_interes(equipo_fuera)):
+                continue
+            salida.append({
+                "id": int(ev["id"]),
+                "utcDate": comp["date"],
+                "competition": {"code": liga, "name": nombre_liga},
+                "homeTeam": equipo_casa,
+                "awayTeam": equipo_fuera,
+                "score": {"fullTime": {"home": int(casa["score"]), "away": int(fuera["score"])}, "halfTime": {}},
+                "venue": (comp.get("venue") or {}).get("fullName"),
+                "referees": [],
+                "matchday": None,
+                "stage": None,
+                "fuente": "espn",
+            })
+    return salida
+
+
+def partidos_terminados(horas: int) -> list[dict]:
+    """football-data primero; ESPN solo para los partidos que football-data no tenga."""
+    partidos = _partidos_football_data(horas)
+    for p in _partidos_espn(horas):
+        repetido = any(
+            p["utcDate"][:10] == f["utcDate"][:10]
+            and (alias(p["homeTeam"]) & alias(f["homeTeam"]) or alias(p["awayTeam"]) & alias(f["awayTeam"]))
+            for f in partidos
+        )
+        if not repetido:
+            partidos.append(p)
+    return partidos
+
+
 def tabla(m: dict) -> str:
     """Posición, puntos y distancia al líder de los dos equipos (solo partidos de liga)."""
     codigo = m["competition"].get("code")
-    if codigo == "CL":
+    if codigo == "CL" or m.get("fuente") == "espn":
         return ""
     datos = http(
         f"https://api.football-data.org/v4/competitions/{codigo}/standings",
@@ -219,11 +280,15 @@ def escribir(m: dict, noticias: list[dict]) -> dict:
             return json.loads(r["candidates"][0]["content"]["parts"][0]["text"])
         except Exception as e:
             print(f"{modelo} no disponible ({e})")
-    raise SystemExit("Ningún modelo de Gemini respondió")
+    # Respaldo: Groq, si hay clave
+    if os.environ.get("GROQ_API_KEY"):
+        print("Gemini no respondió; escribiendo la crónica con Groq")
+        return json.loads(groq_texto(INSTRUCCIONES, f"DATOS:\n{datos}"))
+    raise SystemExit("Ningún modelo de texto respondió (Gemini ni Groq)")
 
 
 def imagen(m: dict, titular: str) -> object:
-    estadio = m.get("venue") or estadio_de(m["homeTeam"]["id"])
+    estadio = m.get("venue") or (estadio_de(m["homeTeam"]["id"]) if m["homeTeam"]["id"] else None)
     fecha = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
     props = {
         "local": nombre(m["homeTeam"]),
