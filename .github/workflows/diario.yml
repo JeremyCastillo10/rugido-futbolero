@@ -5,17 +5,17 @@ on:
     # Cada hora de 8:00 a. m. a 6:00 p. m. (hora de República Dominicana).
     # Solo genera si hoy aún no se publicó, así que los reintentos no gastan cupo.
     - cron: "0 12-22 * * *"
-
-# Una ejecución a la vez: si una tarda más de una hora, la siguiente espera
-concurrency:
-  group: episodio-diario
-  cancel-in-progress: false
   workflow_dispatch:
     inputs:
       publicar:
         description: "¿Publicar en Instagram?"
         type: boolean
         default: true
+
+# Una ejecución a la vez: si una tarda más de una hora, la siguiente espera
+concurrency:
+  group: episodio-diario
+  cancel-in-progress: false
 
 jobs:
   revisar:
