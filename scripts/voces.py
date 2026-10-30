@@ -2,6 +2,7 @@
 
 import base64
 import json
+import time
 import urllib.error
 import wave
 
@@ -70,6 +71,7 @@ def main() -> None:
 
         pcm = None
         con_estilo = True
+        esperas = 0
         while pcm is None:
             if not modelos:
                 raise SystemExit("Se agotó el cupo gratis de todos los modelos de voz por hoy")
@@ -89,9 +91,20 @@ def main() -> None:
                         },
                     },
                 )
-            except (CuotaDiaria, urllib.error.HTTPError) as e:
-                print(f"{modelos[0]} no disponible ({e}), probando el siguiente modelo")
+            except CuotaDiaria:
+                print(f"{modelos[0]} sin cupo por hoy, probando el siguiente modelo")
                 modelos.pop(0)
+                continue
+            except urllib.error.HTTPError as e:
+                # Límite por minuto u error pasajero: esperar y reintentar el mismo modelo
+                esperas += 1
+                if esperas > 3:
+                    print(f"{modelos[0]} sigue fallando ({e}), probando el siguiente modelo")
+                    modelos.pop(0)
+                    esperas = 0
+                else:
+                    print(f"{modelos[0]} ocupado ({e}), esperando un minuto")
+                    time.sleep(60)
                 continue
             audio = base64.b64decode(r["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
             segundos = len(audio) / (24000 * 2)
