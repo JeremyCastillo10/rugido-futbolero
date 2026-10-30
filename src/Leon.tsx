@@ -3,7 +3,8 @@ import { Caja, BOCA, MEJILLA, OJOS, calcularPose, type MunecoProps, type V3 } fr
 
 const PIEL = "#e8913a";
 const HOCICO = "#f6d7a8";
-const SUDADERA = "#1c1c24";
+const SUDADERA = "#17171f";
+const NARANJA = "#f0a04b";
 const MELENA = ["#8a3f1c", "#a8522a", "#6e3015"];
 
 const CABEZA_Y = 1.95;
@@ -32,12 +33,12 @@ export const Leon: React.FC<MunecoProps> = (props) => {
       <Caja p={[0, 1.42, -0.32]} s={[1.0, 0.3, 0.35]} c="#26262f" />
       {/* Cordones */}
       {[-0.18, 0.18].map((cx) => (
-        <Caja key={cx} p={[cx, 1.12, 0.46]} s={[0.04, 0.3, 0.03]} c="#d9d9d9" />
+        <Caja key={cx} p={[cx, 1.12, 0.46]} s={[0.04, 0.3, 0.03]} c={NARANJA} brillo={0.2} />
       ))}
-      {/* Corona en el pecho */}
-      <Caja p={[0, 0.72, 0.46]} s={[0.36, 0.07, 0.03]} c="#f2f2f2" brillo={0.2} />
-      {[-0.14, 0, 0.14].map((cx) => (
-        <Caja key={cx} p={[cx, 0.8, 0.46]} s={[0.07, 0.12, 0.03]} c="#f2f2f2" brillo={0.2} />
+      {/* Corona naranja en el pecho, como en el mockup */}
+      <Caja p={[0, 0.72, 0.46]} s={[0.4, 0.07, 0.03]} c={NARANJA} brillo={0.4} />
+      {[-0.15, 0, 0.15].map((cx) => (
+        <Caja key={cx} p={[cx, 0.8, 0.46]} s={[0.07, 0.12, 0.03]} c={NARANJA} brillo={0.4} />
       ))}
 
       {/* Brazos: manga negra y garra */}

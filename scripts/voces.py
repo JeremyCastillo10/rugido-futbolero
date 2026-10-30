@@ -1,7 +1,9 @@
 """Genera un audio por escena con Gemini TTS (plan gratis de Google AI Studio)."""
 
+import array
 import base64
 import json
+import sys
 import time
 import urllib.error
 import wave
@@ -39,12 +41,33 @@ TONO = {
 }
 
 
+def suavizar(pcm: bytes, rate: int = 24000) -> bytes:
+    """Fundido corto al inicio y al final, con silencio alrededor.
+
+    Sin esto, cada clip empieza y termina de golpe y se oye un chasquido
+    al cambiar de escena.
+    """
+    muestras = array.array("h", pcm)
+    if sys.byteorder == "big":
+        muestras.byteswap()
+    n = min(len(muestras) // 2, int(rate * 0.03))  # fundido de 30 ms
+    for i in range(n):
+        f = i / n
+        muestras[i] = int(muestras[i] * f)
+        muestras[-1 - i] = int(muestras[-1 - i] * f)
+    silencio = array.array("h", [0]) * int(rate * 0.12)  # 120 ms de silencio
+    salida = silencio + muestras + silencio
+    if sys.byteorder == "big":
+        salida.byteswap()
+    return salida.tobytes()
+
+
 def guardar_wav(pcm: bytes, ruta) -> None:
     with wave.open(str(ruta), "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(24000)
-        w.writeframes(pcm)
+        w.writeframes(suavizar(pcm))
 
 
 def main() -> None:
