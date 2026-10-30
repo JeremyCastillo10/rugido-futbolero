@@ -4,6 +4,8 @@ on:
   schedule:
     # 12:00 UTC = 8:00 a.m. en República Dominicana
     - cron: "0 12 * * *"
+    # 20:00 UTC = 4:00 p.m.: respaldo, solo genera si el de la mañana no se publicó
+    - cron: "0 20 * * *"
   workflow_dispatch:
     inputs:
       publicar:
@@ -12,7 +14,22 @@ on:
         default: true
 
 jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    outputs:
+      falta: ${{ steps.revisar.outputs.falta }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: revisar
+        run: |
+          HOY=$(TZ=America/Santo_Domingo date +%F)
+          PUBLICADO=$(python3 -c "import json; print(json.load(open('data/episodio_publicado.json')).get('fecha', ''))" 2>/dev/null || true)
+          echo "Hoy $HOY, último publicado: $PUBLICADO"
+          if [ "$PUBLICADO" = "$HOY" ]; then echo "falta=no" >> "$GITHUB_OUTPUT"; else echo "falta=si" >> "$GITHUB_OUTPUT"; fi
+
   episodio:
+    needs: revisar
+    if: github.event_name == 'workflow_dispatch' || needs.revisar.outputs.falta == 'si'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -52,7 +69,8 @@ jobs:
             out/episodio.mp4
             public/episodio.json
           retention-days: 14
-      - name: Publicar en Instagram
+      - id: ig
+        name: Publicar en Instagram
         if: github.event_name == 'schedule' || inputs.publicar
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,3 +78,11 @@ jobs:
       - name: Publicar en Facebook
         if: (github.event_name == 'schedule' || inputs.publicar) && env.FB_PAGE_TOKEN != ''
         run: python scripts/facebook.py reel
+      - name: Guardar fecha publicada
+        if: steps.ig.outcome == 'success'
+        run: |
+          echo "{\"fecha\": \"$(TZ=America/Santo_Domingo date +%F)\"}" > data/episodio_publicado.json
+          git config user.name "rugido-bot"
+          git config user.email "rugido-bot@users.noreply.github.com"
+          git add data/episodio_publicado.json
+          git diff --cached --quiet || (git commit -m "Episodio publicado" && git pull --rebase -q && git push)
