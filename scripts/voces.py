@@ -58,16 +58,26 @@ def main() -> None:
 
     for i, escena in enumerate(episodio["escenas"]):
         p = escena["personaje"]
-        indicacion = f"Dilo rápido, con ritmo ágil de video corto, {ACENTO[p]}{TONO.get(escena.get('gesto', 'normal'), '')}: {escena['texto']}"
-        r = None
-        while r is None:
+        texto = escena["texto"]
+        estilo = f"rápido y con ritmo ágil, {ACENTO[p]}{TONO.get(escena.get('gesto', 'normal'), '')}"
+        # El estilo va aparte y marcado; la voz solo debe leer lo que está entre comillas
+        indicacion = (
+            f"Instrucción de actuación (NO la leas en voz alta): habla {estilo}.\n"
+            f'Lee en voz alta únicamente este texto, palabra por palabra: "{texto}"'
+        )
+        # Duración razonable para esas palabras; si se pasa mucho, leyó las instrucciones
+        maximo = len(texto.split()) / 2.0 + 2.5
+
+        pcm = None
+        con_estilo = True
+        while pcm is None:
             if not modelos:
                 raise SystemExit("Se agotó el cupo gratis de todos los modelos de voz por hoy")
             try:
                 r = gemini(
                     modelos[0],
                     {
-                        "contents": [{"parts": [{"text": indicacion}]}],
+                        "contents": [{"parts": [{"text": indicacion if con_estilo else texto}]}],
                         "generationConfig": {
                             "responseModalities": ["AUDIO"],
                             "speechConfig": {
@@ -79,8 +89,14 @@ def main() -> None:
             except (CuotaDiaria, urllib.error.HTTPError) as e:
                 print(f"{modelos[0]} no disponible ({e}), probando el siguiente modelo")
                 modelos.pop(0)
-
-        pcm = base64.b64decode(r["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+                continue
+            audio = base64.b64decode(r["candidates"][0]["content"]["parts"][0]["inlineData"]["data"])
+            segundos = len(audio) / (24000 * 2)
+            if con_estilo and segundos > maximo:
+                print(f"  {i:02d}: duró {segundos:.1f}s (máx {maximo:.1f}s), leyó las instrucciones; repitiendo solo con el texto")
+                con_estilo = False
+                continue
+            pcm = audio
         archivo = carpeta / f"{i:02d}.wav"
         guardar_wav(pcm, archivo)
         escena["audio"] = f"audio/{archivo.name}"
