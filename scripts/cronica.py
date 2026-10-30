@@ -7,6 +7,7 @@ Uso:
 """
 
 import json
+from email.utils import parsedate_to_datetime
 import subprocess
 import sys
 import urllib.parse
@@ -15,7 +16,9 @@ from datetime import datetime, timedelta, timezone
 
 import fotos
 from comun import PUBLIC, RAIZ, cargar_env, env, gemini, http
-from guion import MODELOS_TEXTO, titulares
+import xml.etree.ElementTree as ET
+
+from guion import FEEDS, MODELOS_TEXTO
 
 # IDs de football-data.org: Real Madrid y FC Barcelona
 EQUIPOS = {86: "Real Madrid", 81: "FC Barcelona"}
@@ -27,14 +30,15 @@ INSTRUCCIONES = """Eres redactor de "Leo Rugido | Fútbol Europeo", una página 
 Escribe la crónica de un partido que acaba de terminar.
 
 Reglas:
-1. Usa SOLO los hechos de los DATOS (resultado, descanso, competición, estadio, árbitro, titulares de prensa).
+1. Habla SOLO de este partido. Usa SOLO los hechos de los DATOS (resultado, descanso, competición, estadio, árbitro
+   y las noticias de prensa sobre el partido: goleadores, jugadas o protagonistas que mencionen). No menciones otras noticias.
    No inventes goleadores, minutos, jugadas, lesiones ni declaraciones. Si no hay datos de goleadores, no los nombres.
    Tampoco saques conclusiones que no estén en los datos (rachas, posición en la tabla, "lucha por el título", "gran momento").
 2. Formato:
    - "titular": frase corta y con gancho (máx 70 caracteres), sin emojis.
    - "texto": 3-4 párrafos cortos separados por una línea en blanco. Empieza con un emoji y el resultado en mayúsculas
-     (ej: "⚽ FINAL | Barça 3-1 Alavés"). Cuenta qué significa el resultado, el contexto (competición, rachas o titulares
-     si los hay) y qué viene después si aparece en los datos.
+     (ej: "⚽ FINAL | Barça 3-1 Alavés"). Cuenta cómo fue el partido: resultado, cómo iba al descanso y, si las
+     noticias lo dicen, quién marcó y los momentos clave. No pongas enlaces en el texto.
    - Termina con una pregunta para que la gente comente y 4-5 hashtags.
 3. Tono: periodístico pero cercano y con un toque de humor; al final, una línea de Merenguito o Culerín (los hinchas del canal)
    reaccionando, por ejemplo: "Merenguito: ..." o "Culerín: ...".
@@ -75,11 +79,77 @@ def estadio_de(equipo_id: int) -> str | None:
     return datos.get("venue")
 
 
-def escribir(m: dict) -> dict:
+# Feeds extra de los dos clubes, donde salen las crónicas de sus partidos
+FEEDS_CLUBES = [
+    "https://e00-marca.uecdn.es/rss/futbol/real-madrid.xml",
+    "https://e00-marca.uecdn.es/rss/futbol/barcelona.xml",
+    "https://as.com/rss/futbol/real_madrid.xml",
+    "https://as.com/rss/futbol/barcelona.xml",
+]
+
+
+def alias(equipo: dict) -> set[str]:
+    """Formas en que la prensa nombra a un equipo (Barça, Barcelona, FC Barcelona...)."""
+    nombres = {equipo["name"], equipo.get("shortName") or "", equipo.get("tla") or ""}
+    limpio = set()
+    for n in nombres:
+        for palabra in ("FC ", " FC", "CF ", " CF", "Club ", "Deportivo "):
+            n = n.replace(palabra, "")
+        if len(n) > 2:
+            limpio.add(n.lower())
+    if "barcelona" in limpio or "barça" in limpio:
+        limpio |= {"barça", "barcelona", "barca"}
+    return limpio
+
+
+def noticias_partido(m: dict) -> list[dict]:
+    """Crónicas de prensa de este partido: nombran a los dos equipos, salen en las 48 h siguientes
+    y hablan del resultado (traen el marcador o palabras de crónica)."""
+    local, visita = alias(m["homeTeam"]), alias(m["awayTeam"])
+    ft = m["score"]["fullTime"]
+    marcadores = {f"{ft['home']}-{ft['away']}", f"{ft['away']}-{ft['home']}",
+                  f"{ft['home']} - {ft['away']}", f"{ft['away']} - {ft['home']}"}
+    palabras = ("crónica", "resumen", "gol", "golazo", "remontada", "victoria", "derrota", "empate", "report", "win", "beat")
+    inicio = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
+    vistos, encontradas = set(), []
+    for feed in FEEDS_CLUBES + FEEDS:
+        try:
+            req = urllib.request.Request(feed, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                raiz = ET.fromstring(r.read())
+        except Exception as e:
+            print("feed", feed, e)
+            continue
+        for item in raiz.iter("item"):
+            titulo = (item.findtext("title") or "").strip()
+            desc = fotos.limpiar(item.findtext("description") or "")[:300]
+            enlace = (item.findtext("link") or "").strip()
+            texto = f"{titulo} {desc}".lower()
+            if not enlace or enlace in vistos:
+                continue
+            if not (any(a in texto for a in local) and any(a in texto for a in visita)):
+                continue
+            try:
+                publicado = parsedate_to_datetime(item.findtext("pubDate") or "")
+            except (TypeError, ValueError):
+                continue
+            if not inicio <= publicado <= inicio + timedelta(hours=48):
+                continue
+            con_marcador = any(s in texto for s in marcadores)
+            if not con_marcador and not any(p in texto for p in palabras):
+                continue
+            vistos.add(enlace)
+            encontradas.append({"titulo": titulo, "desc": desc, "enlace": enlace, "marcador": con_marcador})
+    # Primero las que traen el marcador (son las crónicas de verdad) y, entre ellas, los medios en español
+    ingles = ("bbc.", "espn.com/", "skysports.")
+    encontradas.sort(key=lambda n: (not n["marcador"], any(d in n["enlace"] for d in ingles)))
+    return encontradas[:6]
+
+
+def escribir(m: dict, noticias: list[dict]) -> dict:
     local, visita = nombre(m["homeTeam"]), nombre(m["awayTeam"])
     ft, ht = m["score"]["fullTime"], m["score"].get("halfTime") or {}
-    claves = [local.lower(), visita.lower(), m["homeTeam"]["name"].lower(), m["awayTeam"]["name"].lower()]
-    relacionados = [t for t in titulares() if any(k in t.lower() for k in claves)][:12]
+    relacionados = [f"- {n['titulo']}. {n['desc']}" for n in noticias]
     arbitro = ", ".join(r["name"] for r in m.get("referees", []) if r.get("type") == "REFEREE")
     datos = (
         f"Competición: {m['competition']['name']} (jornada {m.get('matchday')}, fase {m.get('stage')})\n"
@@ -88,7 +158,7 @@ def escribir(m: dict) -> dict:
         f"Descanso: {ht.get('home')}-{ht.get('away')}\n"
         f"Estadio: {m.get('venue') or 'desconocido'}\n"
         f"Árbitro: {arbitro or 'desconocido'}\n\n"
-        "Titulares de prensa relacionados:\n" + ("\n".join(relacionados) or "(ninguno todavía)")
+        "Noticias de prensa sobre ESTE partido:\n" + ("\n".join(relacionados) or "(ninguna todavía)")
     )
     print(datos, "\n")
     cuerpo = {
@@ -155,16 +225,23 @@ def main() -> None:
 
     for m in partidos:
         print(f"== {nombre(m['homeTeam'])} vs {nombre(m['awayTeam'])} ==")
-        cronica = escribir(m)
-        png = imagen(m, cronica["titular"])
+        noticias = noticias_partido(m)
+        print(f"{len(noticias)} noticias del partido encontradas")
+        cronica = escribir(m, noticias)
+        enlace = noticias[0]["enlace"] if noticias else None
+        png = None if enlace else imagen(m, cronica["titular"])
         (RAIZ / "out" / "cronica.txt").write_text(cronica["texto"], encoding="utf-8")
         print("\n" + cronica["titular"] + "\n\n" + cronica["texto"])
         if prueba:
-            print(f"\n(prueba: no se publica) imagen en {png}")
+            destino = f"enlace con foto del medio: {enlace}" if enlace else f"imagen propia: {png}"
+            print(f"\n(prueba: no se publica) {destino}")
             continue
-        from facebook import publicar_foto
+        from facebook import publicar_enlace, publicar_foto
 
-        publicar_foto(png, cronica["texto"])
+        if enlace:
+            publicar_enlace(enlace, cronica["texto"])
+        else:
+            publicar_foto(png, cronica["texto"])
         publicadas.append(m["id"])
         PUBLICADAS.parent.mkdir(exist_ok=True)
         PUBLICADAS.write_text(json.dumps(publicadas))

@@ -41,6 +41,14 @@ def publicar_foto(ruta_png, mensaje: str) -> str:
     return resultado.get("post_id") or resultado["id"]
 
 
+def publicar_enlace(enlace: str, mensaje: str) -> str:
+    """Publica texto con enlace a una noticia; Facebook muestra la foto del medio en la vista previa."""
+    pagina, token = env("FB_PAGE_ID"), env("FB_PAGE_TOKEN")
+    resultado = http(f"{API}/{pagina}/feed", {"message": mensaje, "link": enlace, "access_token": token})
+    print("Publicado en Facebook:", resultado["id"])
+    return resultado["id"]
+
+
 def publicar_reel(ruta_mp4, descripcion: str) -> str:
     """Sube un Reel a la página en tres fases: iniciar, subir el archivo y publicar."""
     pagina, token = env("FB_PAGE_ID"), env("FB_PAGE_TOKEN")
