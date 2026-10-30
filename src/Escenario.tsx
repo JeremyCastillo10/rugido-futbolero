@@ -123,6 +123,17 @@ export const Escenario: React.FC<{
       <Pantalla p={[0, 4.0, -3.05]} s={[6.2, 3.4, 0.12]} color="#0f2f6b" intensidad={pulso + 0.1} />
       <Pantalla p={[0, 4.0, -2.98]} s={[6.0, 0.08, 0.02]} color={NARANJA} intensidad={0.6} />
       <Corona p={[0, 5.95, -2.95]} s={0.55} c={NARANJA} />
+      {/* Pantalla central con un campo y luces de la grada, como en el mockup */}
+      <Pantalla p={[0, 2.6, -2.99]} s={[6.0, 0.9, 0.03]} color="#1b7f3b" intensidad={0.45} />
+      {Array.from({ length: 36 }, (_, i) => (
+        <Pantalla
+          key={`luz${i}`}
+          p={[-2.8 + (i % 12) * 0.52, 3.55 + Math.floor(i / 12) * 0.5, -2.97]}
+          s={[0.14, 0.14, 0.02]}
+          color={i % 3 === 0 ? NARANJA : "#dfe9ff"}
+          intensidad={0.5 + Math.sin(frame / 9 + i) * 0.3}
+        />
+      ))}
       {/* Paneles laterales */}
       <Pantalla p={[-4.9, 3.6, -3.0]} s={[2.9, 4.4, 0.12]} color="#123a86" intensidad={pulso} />
       <Pantalla p={[4.9, 3.6, -3.0]} s={[2.9, 4.4, 0.12]} color="#1b4fa8" intensidad={pulso} />

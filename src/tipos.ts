@@ -63,5 +63,5 @@ export const FPS = 30;
 export const INTRO = 45;
 export const OUTRO = 75;
 export const PAUSA = 6;
-// Las voces de Gemini son lentas; se aceleran sin cambiar el tono
-export const VELOCIDAD = 1.15;
+// Velocidad de la voz. Antes 1.15 para compensar; ahora a ritmo natural para que el video dure 1:00-1:20
+export const VELOCIDAD = 1.0;

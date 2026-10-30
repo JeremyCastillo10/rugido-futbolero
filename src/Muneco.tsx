@@ -171,6 +171,9 @@ const Bufanda: React.FC<{ a: string; b: string }> = ({ a, b }) => (
   <group position={[0, CY + H / 2 - 0.06, D / 2 + 0.03]}>
     <Caja p={[0, 0, 0]} s={[W + 0.14, 0.1, 0.18]} c={a} />
     <Caja p={[0, -0.11, 0]} s={[W + 0.14, 0.1, 0.18]} c={b} />
+    {/* Cola de la bufanda colgando al costado */}
+    <Caja p={[0.65, -0.36, 0.04]} s={[0.14, 0.62, 0.12]} c={a} />
+    <Caja p={[0.65, -0.1, 0.04]} s={[0.14, 0.1, 0.12]} c={b} />
   </group>
 );
 
@@ -180,6 +183,8 @@ const Gorra: React.FC<{ c: string; franja: string }> = ({ c, franja }) => (
     <Caja p={[0, 0.16, 0]} s={[W * 0.86, 0.3, D * 0.86]} c={c} />
     <Caja p={[0, 0.04, 0]} s={[W * 0.9, 0.07, D * 0.9]} c={franja} />
     <Caja p={[0, 0.16, D * 0.43 + 0.14]} s={[W * 0.7, 0.06, 0.4]} r={[0.12, 0, 0]} c={c} />
+    {/* Escudito blanco en el frente de la gorra */}
+    <Caja p={[0, 0.2, D * 0.43 + 0.02]} s={[0.22, 0.16, 0.03]} c={franja} brillo={0.3} />
   </group>
 );
 
@@ -189,7 +194,10 @@ export const Muneco: React.FC<MunecoProps> = (props) => {
   const p = calcularPose(props);
   const esCule = tipo === "cule";
   // Colores del equipo: cuerpo, tenis y extremidades
-  const extremidad = esCule ? "#1a2a6c" : "#f4f1ea";
+  // Pantalón azul marino para ambos; tenis blancos (merengue) o rojos (culé)
+  const extremidad = esCule ? "#1a2a6c" : "#1a3f8f";
+  const tenis = esCule ? "#c8102e" : "#f4f1ea";
+  const guante = esCule ? "#c8102e" : "#f4f1ea";
   const brazoColor = esCule ? "#c8102e" : "#f4f1ea";
   const brazoColorD = esCule ? "#1a2a6c" : "#f4f1ea";
 
@@ -202,16 +210,21 @@ export const Muneco: React.FC<MunecoProps> = (props) => {
       {/* Patas */}
       {[-0.42, 0.42].map((px) =>
         [-0.3, 0.3].map((pz) => (
-          <Caja key={`${px}${pz}`} p={[px, 0.2, pz]} s={[0.26, 0.4, 0.26]} c={extremidad} />
+          <group key={`${px}${pz}`}>
+            <Caja p={[px, 0.2, pz]} s={[0.26, 0.4, 0.26]} c={extremidad} />
+            <Caja p={[px, 0.05, pz + 0.04]} s={[0.28, 0.12, 0.34]} c={tenis} />
+          </group>
         )),
       )}
 
       {/* Brazos con pivote en el hombro */}
       <group position={[-W / 2 - 0.12, CY + 0.25, 0]} rotation={[0, 0, p.brazoI]}>
         <Caja p={[0, -0.25, 0]} s={[0.22, 0.5, 0.3]} c={brazoColor} />
+        <Caja p={[0, -0.56, 0]} s={[0.26, 0.2, 0.3]} c={guante} />
       </group>
       <group position={[W / 2 + 0.12, CY + 0.25, 0]} rotation={[0, 0, p.brazoD]}>
         <Caja p={[0, -0.25, 0]} s={[0.22, 0.5, 0.3]} c={brazoColorD} />
+        <Caja p={[0, -0.56, 0]} s={[0.26, 0.2, 0.3]} c={guante} />
       </group>
 
       {/* Ojos */}
@@ -220,7 +233,7 @@ export const Muneco: React.FC<MunecoProps> = (props) => {
           <Caja
             p={[ex, CY + 0.17, FZ]}
             s={[0.24 * p.ojoS, 0.3 * p.ojoY * p.ojoS, 0.04]}
-            c={OJOS}
+            c={esCule ? OJOS : "#1f5fbf"}
           />
           {p.ojoY > 0.5 && (
             <Caja p={[ex + 0.05, CY + 0.24, FZ + 0.025]} s={[0.07, 0.07, 0.02]} c="#ffffff" brillo={0.6} />

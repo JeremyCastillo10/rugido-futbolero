@@ -35,7 +35,7 @@ Reglas:
 2. El humor va en los comentarios y piques entre Merenguito y Culerín, nunca en datos falsos.
 3. Elige las 3 noticias más interesantes (prioriza Madrid/Barça si las hay, luego grandes de Europa).
 4. Estructura: saludo del presentador; para cada noticia: presentador la cuenta (con "titular") y 1-2 réplicas de los comentaristas; cierre del presentador con una pregunta para que la gente comente.
-5. Frases MUY cortas y naturales, máximo 16 palabras por escena. Total 8-10 escenas (unos 45 segundos). Ritmo rápido de Reel.
+5. Frases cortas y naturales, máximo 18 palabras por escena. Total 13-15 escenas (unos 70 segundos de video, nunca menos de 65). Ritmo rápido de Reel.
 6. Nada ofensivo, sin insultos a jugadores, árbitros ni aficiones.
 7. "titular" solo en la escena del presentador que abre cada noticia, formato "1/3 · Texto corto" (máx 45 caracteres).
 8. gesto: uno de normal, burla, enojo, risa, triste, celebrar, sorpresa.
