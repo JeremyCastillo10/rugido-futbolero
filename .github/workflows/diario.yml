@@ -11,6 +11,10 @@ on:
         description: "¿Publicar en Instagram?"
         type: boolean
         default: true
+      forzar:
+        description: "Generar aunque hoy ya se haya publicado"
+        type: boolean
+        default: false
 
 # Una ejecución a la vez: si una tarda más de una hora, la siguiente espera
 concurrency:
@@ -33,7 +37,7 @@ jobs:
 
   episodio:
     needs: revisar
-    if: github.event_name == 'workflow_dispatch' || needs.revisar.outputs.falta == 'si'
+    if: (github.event_name == 'workflow_dispatch' && inputs.forzar) || needs.revisar.outputs.falta == 'si'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
