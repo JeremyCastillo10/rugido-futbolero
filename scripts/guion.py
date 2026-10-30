@@ -3,7 +3,8 @@
 import json
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 
 from comun import EPISODIO, cargar_env, env, gemini, http
 
@@ -76,21 +77,38 @@ def partidos_de_ayer() -> list[str]:
     return lineas
 
 
-def titulares() -> list[str]:
-    lineas = []
+def titulares(horas: int = 48) -> list[str]:
+    """Solo titulares recientes (últimas 48 h), del más nuevo al más viejo.
+
+    Los feeds RSS guardan artículos viejos; sin este filtro el guion podía
+    contar noticias de hace años como si fueran de hoy.
+    """
+    limite = datetime.now(timezone.utc) - timedelta(hours=horas)
+    candidatos = []
     for feed in FEEDS:
         try:
             req = urllib.request.Request(feed, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=20) as r:
                 raiz = ET.fromstring(r.read())
-            for item in list(raiz.iter("item"))[:12]:
+            for item in raiz.iter("item"):
                 titulo = (item.findtext("title") or "").strip()
                 desc = (item.findtext("description") or "").strip()[:200]
-                if titulo:
-                    lineas.append(f"- {titulo}. {desc}")
+                fecha_txt = item.findtext("pubDate")
+                if not titulo or not fecha_txt:
+                    continue
+                try:
+                    fecha = parsedate_to_datetime(fecha_txt.strip())
+                except (TypeError, ValueError):
+                    continue
+                if fecha.tzinfo is None:
+                    fecha = fecha.replace(tzinfo=timezone.utc)
+                if fecha < limite:
+                    continue
+                candidatos.append((fecha, f"- {titulo}. {desc}"))
         except Exception as e:
             print("feed", feed, e)
-    return lineas
+    candidatos.sort(key=lambda c: c[0], reverse=True)
+    return [linea for _, linea in candidatos[:20]]
 
 
 def main() -> None:
