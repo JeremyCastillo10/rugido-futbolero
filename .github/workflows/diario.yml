@@ -94,4 +94,4 @@ jobs:
           git config user.name "rugido-bot"
           git config user.email "rugido-bot@users.noreply.github.com"
           git add data/episodio_publicado.json
-          git diff --cached --quiet || (git commit -m "Episodio publicado" && git pull --rebase -q && git push)
+          git diff --cached --quiet || (git commit -m "Episodio publicado" && git pull --rebase -q origin main && git push origin HEAD:main)
