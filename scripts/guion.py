@@ -4,6 +4,7 @@ import html
 import json
 import os
 import re
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta, timezone
@@ -87,20 +88,44 @@ def partidos_de_ayer() -> list[str]:
     return lineas
 
 
+# Modelos de Groq en orden de preferencia (se puede cambiar con GROQ_MODELOS en los secretos/env)
+MODELOS_GROQ = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+
+
 def groq_texto(sistema: str, usuario: str) -> str:
-    """Respaldo del guion con Groq (API compatible con OpenAI). Devuelve el JSON como texto."""
-    cuerpo = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}],
-        "response_format": {"type": "json_object"},
-        "temperature": 0.9,
-    }
-    respuesta = http(
-        "https://api.groq.com/openai/v1/chat/completions",
-        cuerpo,
-        {"Authorization": f"Bearer {env('GROQ_API_KEY')}"},
-    )
-    return respuesta["choices"][0]["message"]["content"]
+    """Respaldo con Groq (API compatible con OpenAI). Prueba varios modelos y devuelve el JSON como texto."""
+    errores = []
+    for modelo in env("GROQ_MODELOS", ",".join(MODELOS_GROQ)).split(","):
+        for modo_json in (True, False):
+            cuerpo = {
+                "model": modelo,
+                "messages": [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}],
+                "temperature": 0.9,
+            }
+            if modo_json:
+                cuerpo["response_format"] = {"type": "json_object"}
+            try:
+                respuesta = http(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    cuerpo,
+                    {"Authorization": f"Bearer {env('GROQ_API_KEY')}"},
+                )
+                texto = respuesta["choices"][0]["message"]["content"]
+                # Sin modo JSON el modelo puede rodear el JSON con texto: se recorta
+                inicio, fin = texto.find("{"), texto.rfind("}")
+                json.loads(texto[inicio : fin + 1])
+                print(f"Texto escrito con Groq ({modelo})")
+                return texto[inicio : fin + 1]
+            except urllib.error.HTTPError as e:
+                detalle = e.read().decode(errors="ignore")[:300]
+                errores.append(f"{modelo} {e.code}: {detalle}")
+                print(f"Groq {modelo} respondió {e.code}: {detalle}")
+                if e.code != 400:
+                    break  # 404/401/429: este modelo no sirve, probar el siguiente
+            except (ValueError, KeyError) as e:
+                errores.append(f"{modelo}: respuesta no válida ({e})")
+                print(f"Groq {modelo}: respuesta no válida ({e})")
+    raise RuntimeError("Ningún modelo de Groq respondió: " + " | ".join(errores))
 
 
 def limpiar_html(texto: str) -> str:
