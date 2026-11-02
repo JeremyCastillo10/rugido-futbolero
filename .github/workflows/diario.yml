@@ -87,11 +87,16 @@ jobs:
       - name: Publicar en Facebook
         if: (github.event_name == 'schedule' || inputs.publicar) && env.FB_PAGE_TOKEN != ''
         run: python scripts/facebook.py reel
+      # Se guarda con la API de GitHub y no con git: a esta altura public/episodio.json
+      # está modificado y git pull --rebase falla, lo que hacía publicar cada hora.
       - name: Guardar fecha publicada
         if: steps.ig.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "{\"fecha\": \"$(TZ=America/Santo_Domingo date +%F)\"}" > data/episodio_publicado.json
-          git config user.name "rugido-bot"
-          git config user.email "rugido-bot@users.noreply.github.com"
-          git add data/episodio_publicado.json
-          git diff --cached --quiet || (git commit -m "Episodio publicado" && git pull --rebase -q origin main && git push origin HEAD:main)
+          ARCHIVO=data/episodio_publicado.json
+          CONTENIDO=$(printf '{"fecha": "%s"}\n' "$(TZ=America/Santo_Domingo date +%F)" | base64 -w0)
+          SHA=$(gh api "repos/$GITHUB_REPOSITORY/contents/$ARCHIVO?ref=main" --jq .sha 2>/dev/null || true)
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/$ARCHIVO" \
+            -f message="Episodio publicado" -f branch=main -f content="$CONTENIDO" \
+            ${SHA:+-f sha="$SHA"} --jq .commit.sha
