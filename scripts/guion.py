@@ -134,8 +134,8 @@ def limpiar_html(texto: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(sin_etiquetas)).strip()
 
 
-def titulares(horas: int = 48) -> list[str]:
-    """Solo titulares recientes (últimas 48 h), del más nuevo al más viejo.
+def titulares(horas: int = 26) -> list[str]:
+    """Solo titulares desde el episodio anterior (últimas 26 h), del más nuevo al más viejo.
 
     Los feeds RSS guardan artículos viejos; sin este filtro el guion podía
     contar noticias de hace años como si fueran de hoy.
