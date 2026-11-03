@@ -7,8 +7,17 @@ import sys
 import time
 import urllib.error
 import wave
+import os
 
 from comun import EPISODIO, PUBLIC, CuotaDiaria, cargar_env, env, gemini
+from tts_cloud import guardar_wav as guardar_wav_cloud, sintetizar
+
+# Voces de Google Cloud TTS por personaje (español de España); si una no existe se prueba la siguiente
+VOCES_CLOUD = {
+    "presentador": ["es-ES-Chirp3-HD-Charon", "es-ES-Neural2-F", "es-ES-Standard-B"],
+    "merengue": ["es-ES-Chirp3-HD-Puck", "es-ES-Neural2-G", "es-ES-Standard-D"],
+    "cule": ["es-ES-Chirp3-HD-Fenrir", "es-ES-Neural2-B", "es-ES-Standard-B"],
+}
 
 MODELOS_TTS = [
     "gemini-3.8-flash-tts",
@@ -79,6 +88,17 @@ def main() -> None:
     carpeta.mkdir(exist_ok=True)
     for viejo in carpeta.glob("*.*"):
         viejo.unlink()
+
+    # Con GOOGLE_TTS_KEY se usa Google Cloud TTS (más estable y sin cupo diario de Gemini)
+    if os.environ.get("GOOGLE_TTS_KEY"):
+        for i, escena in enumerate(episodio["escenas"]):
+            p = escena["personaje"]
+            archivo = carpeta / f"{i:02d}.wav"
+            guardar_wav_cloud(sintetizar(escena["texto"], VOCES_CLOUD[p], idioma="es-ES", velocidad=1.08), archivo)
+            escena["audio"] = f"audio/{archivo.name}"
+            print(f"{archivo.name}  {p}: {escena['texto'][:60]}")
+        EPISODIO.write_text(json.dumps(episodio, ensure_ascii=False, indent=2), encoding="utf-8")
+        return
 
     for i, escena in enumerate(episodio["escenas"]):
         p = escena["personaje"]
