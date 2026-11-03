@@ -398,21 +398,21 @@ def main() -> None:
         cronica["texto"] = texto_seo(m, cronica)
         # Prioridad: noticia del partido (foto del medio); si no hay, la página del partido en ESPN
         enlace = noticias[0]["enlace"] if noticias else (m.get("enlace_partido") or _enlace_espn(m))
-        png = None if enlace else imagen(m, cronica["titular"])
+        # Facebook le da poco alcance a los posts con enlace: siempre se publica la tarjeta
+        # como foto y el enlace (con la foto real del medio) va en el primer comentario
+        png = imagen(m, cronica["titular"])
         # out/ solo existía si se generaba la tarjeta; con enlace hay que crearla
         (RAIZ / "out").mkdir(exist_ok=True)
         (RAIZ / "out" / "cronica.txt").write_text(cronica["texto"], encoding="utf-8")
         print("\n" + cronica["titular"] + "\n\n" + cronica["texto"])
         if prueba:
-            destino = f"enlace con foto del medio: {enlace}" if enlace else f"imagen propia: {png}"
-            print(f"\n(prueba: no se publica) {destino}")
+            print(f"\n(prueba: no se publica) foto: {png} · enlace en comentario: {enlace}")
             continue
-        from facebook import publicar_enlace, publicar_foto
+        from facebook import comentar, publicar_foto
 
+        post_id = publicar_foto(png, cronica["texto"])
         if enlace:
-            publicar_enlace(enlace, cronica["texto"])
-        else:
-            publicar_foto(png, cronica["texto"])
+            comentar(post_id, f"📰 Toda la info del partido: {enlace}")
         publicadas.append(m["id"])
         PUBLICADAS.parent.mkdir(exist_ok=True)
         PUBLICADAS.write_text(json.dumps(publicadas))

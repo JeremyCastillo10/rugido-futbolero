@@ -41,6 +41,18 @@ def publicar_foto(ruta_png, mensaje: str) -> str:
     return resultado.get("post_id") or resultado["id"]
 
 
+def comentar(post_id: str, mensaje: str) -> str | None:
+    """Primer comentario en un post de la página (para poner ahí el enlace a la noticia)."""
+    token = env("FB_PAGE_TOKEN")
+    try:
+        resultado = http(f"{API}/{post_id}/comments", {"message": mensaje, "access_token": token})
+    except Exception as e:  # si el comentario falla, el post ya está publicado: no tumbar la crónica
+        print("No se pudo comentar el enlace:", e)
+        return None
+    print("Comentario con enlace:", resultado.get("id"))
+    return resultado.get("id")
+
+
 def publicar_enlace(enlace: str, mensaje: str) -> str:
     """Publica texto con enlace a una noticia; Facebook muestra la foto del medio en la vista previa."""
     pagina, token = env("FB_PAGE_ID"), env("FB_PAGE_TOKEN")

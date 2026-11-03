@@ -2,9 +2,9 @@ name: Episodio diario
 
 on:
   schedule:
-    # Cada hora de 8:00 a. m. a 6:00 p. m. (hora de República Dominicana).
+    # Cada hora de 12:00 p. m. a 6:00 p. m. (hora de República Dominicana).
     # Solo genera si hoy aún no se publicó, así que los reintentos no gastan cupo.
-    - cron: "0 12-22 * * *"
+    - cron: "0 16-22 * * *"
   workflow_dispatch:
     inputs:
       publicar:
